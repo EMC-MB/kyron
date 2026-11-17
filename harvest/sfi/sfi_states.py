@@ -89,12 +89,24 @@ STATES = {
                   "Health Services (excl. 5 local jurisdictions)",
         "model": "PASS_FAIL",
         "score_col": "auto", "viols": "auto",
-        "start_year": 2015, "window_months": 1, "enabled": False,
-        # 2026-11-17: WDA search POST 500s on ANY query
-        # returning rows — year/month/week/day spans and
-        # both MM/DD/YYYY + ISO formats verified; only an
-        # empty-result query ever returned 200. Source
-        # reachable but non-functional for search.
+        "start_year": 2015, "window_months": 1, "enabled": True,
+        # 2026-11-17 re-verified: search POST returns rows again
+        # (90 records in a 7-day window) — the earlier "500s on
+        # ANY query" outage was transient.
+    },
+    "nd": {
+        "url": "https://fims.doh.nd.gov/Web/Inspection/"
+               "PublicInspectionSearch.aspx",
+        "state": "ND", "name": "North Dakota",
+        "region": "us-nd", "jur": "ND-DOH", "source_id": "nd-doh",
+        "agency": "North Dakota Dept. of Health & Human Services — "
+                  "Food and Lodging (state + 5 MOU local units)",
+        "model": "VIOLATIONS_ONLY",
+        "score_col": "auto", "viols": "auto",
+        "start_year": 2015, "enabled": True,
+        # same Food Safety 5.x WebForms shell, deployed under /Web/
+        # like AR/PA; search POST verified 100 records in a 7-day
+        # window 2026-11-17.
     },
     "ak": {
         "url": "https://adec.safefoodinspection.com/Inspection/"

@@ -1,0 +1,8 @@
+16410 submittable / 34 skipped of 16444
+chunk 0: 3000 rows in 10s
+chunk 1: 3000 rows in 11s
+chunk 2: 3000 rows in 11s
+chunk 3: 3000 rows in 11s
+chunk 4: 3000 rows in 13s
+chunk 5: 1410 rows in 6s
+accepted 13453/16444 -> harvest/ms/out/ms/places.json
