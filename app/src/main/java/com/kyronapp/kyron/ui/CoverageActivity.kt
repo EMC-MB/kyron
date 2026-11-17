@@ -146,8 +146,10 @@ class CoverageActivity : AppCompatActivity() {
             }
             val title = TextView(this).apply {
                 text = name
-                textSize = 16f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                textSize = 16.5f
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(
+                    context, R.font.barlow_semibold)
+                setTextColor(ContextCompat.getColor(context, R.color.ink))
             }
             titleRow.addView(title)
             if (jur.type == "federal-district") {
@@ -170,6 +172,31 @@ class CoverageActivity : AppCompatActivity() {
             }
             row.addView(titleRow)
 
+            // Status line: dot + text — the color carries the state
+            // (on-device / downloadable / pending / not integrated).
+            val statusColor = when {
+                isActive || installed -> 0xFF2E9E4F.toInt()
+                (jur.packAvailability == "downloadable-verified") ||
+                    (jur.packAvailability == "declared-only" && liveProbe[regionId] == true) ->
+                    0xFF1E6B38.toInt()
+                jur.packAvailability == "declared-only" || jur.packStatus == "built" ->
+                    0xFFE8A13A.toInt()
+                else -> 0xFF8A97A5.toInt()
+            }
+            val statusRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(0, dp(4), 0, 0)
+            }
+            statusRow.addView(View(this).apply {
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(statusColor)
+                }
+                layoutParams = LinearLayout.LayoutParams(dp(8), dp(8)).apply {
+                    marginEnd = dp(7)
+                    topMargin = dp(5)
+                }
+            })
             val hostNote = when (jur.packHostStatus) {
                 "unreachable-404" ->
                     " — pack host unreachable (HTTP 404, checked ${jur.packHostChecked})"
@@ -207,11 +234,12 @@ class CoverageActivity : AppCompatActivity() {
                     "Data harvested & pack built — publication pending (no download yet)"
                 else -> "Not integrated yet — registered official source(s) listed below"
             }
-            row.addView(TextView(this).apply {
+            statusRow.addView(TextView(this).apply {
                 text = statusText
                 textSize = 13f
-                setTextColor(0xFF5A6B7A.toInt())
+                setTextColor(statusColor)
             })
+            row.addView(statusRow)
             row.addView(TextView(this).apply {
                 text = com.kyronapp.kyron.data.NationalCoverage.legend(jur.resultModel)
                 textSize = 12f
@@ -219,7 +247,12 @@ class CoverageActivity : AppCompatActivity() {
                 setPadding(0, dp(2), 0, 0)
             })
 
-            val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            // FlowRow: buttons wrap instead of clipping off the card.
+            val actions = FlowRowLayout(this).apply {
+                hGap = dp(8)
+                vGap = dp(4)
+                setPadding(0, dp(8), 0, 0)
+            }
             if (installed && info != null && !isActive) {
                 actions.addView(actionButton("Use $name") {
                     app.regions.setActive(regionId, manual = true)
@@ -427,8 +460,6 @@ class CoverageActivity : AppCompatActivity() {
             text = label
             isAllCaps = false
             textSize = 13f
-            backgroundTintList = android.content.res.ColorStateList.valueOf(0xFFDAE7DB.toInt())
-            setTextColor(0xFF16281B.toInt())
             setOnClickListener { onClick() }
         }
 

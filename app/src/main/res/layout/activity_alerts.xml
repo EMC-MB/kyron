@@ -25,10 +25,13 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/font_barlow_condensed"
+            android:letterSpacing="0.05"
             android:text="@string/notif_title"
+            android:textAllCaps="true"
             android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textFontWeight="700"
+            android:textSize="21sp" />
     </LinearLayout>
 
     <ScrollView

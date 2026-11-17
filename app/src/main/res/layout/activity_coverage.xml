@@ -25,17 +25,21 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/font_barlow_condensed"
+            android:letterSpacing="0.05"
             android:text="@string/coverage_title"
+            android:textAllCaps="true"
             android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textFontWeight="700"
+            android:textSize="21sp" />
     </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp"
+        android:padding="14dp"
         android:text="@string/coverage_explainer"
+        android:textColor="@color/muted"
         android:textSize="13sp" />
 
     <Button
@@ -43,10 +47,11 @@
         android:id="@+id/cov_location_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
         android:drawableStart="@drawable/ic_my_location"
         android:drawablePadding="6dp"
+        android:drawableTint="@color/kyron_primary"
         android:text="@string/action_use_location"
         android:textAllCaps="false" />
 
@@ -65,13 +70,14 @@
         android:layout_marginStart="12dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="12dp"
-        android:background="@drawable/card_bg"
+        android:background="@drawable/search_pill"
         android:drawableStart="@drawable/ic_search"
         android:drawablePadding="8dp"
+        android:drawableTint="@color/kyron_primary"
         android:hint="@string/hint_search_states"
         android:inputType="text"
         android:maxLines="1"
-        android:padding="10dp" />
+        android:padding="12dp" />
 
     <ScrollView
         android:layout_width="match_parent"

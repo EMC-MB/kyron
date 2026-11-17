@@ -648,7 +648,10 @@ class MapFragment : Fragment() {
         val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = 0xFFFFFFFF.toInt()
             textAlign = Paint.Align.CENTER
-            typeface = Typeface.DEFAULT_BOLD
+            typeface = context?.let {
+                androidx.core.content.res.ResourcesCompat.getFont(
+                    it, R.font.barlowcondensed_bold)
+            } ?: Typeface.DEFAULT_BOLD
         }
         // Shrink-to-fit: numbers stay big, long word badges (native
         // results like "Out of Business") shrink until they fit.
@@ -852,29 +855,12 @@ class MapFragment : Fragment() {
         val badge = root.findViewById<TextView>(R.id.sheet_badge)
         badge.text = p.badgeText
         // Word badges (native results) need smaller type than numbers.
-        badge.textSize = if (p.hasNumericScore) 20f else 10f
-        badge.setBackgroundResource(
-            when {
-                !p.hasNumericScore -> when (p.resultTone) {
-                    1 -> R.drawable.score_green
-                    2 -> R.drawable.score_amber
-                    3 -> R.drawable.score_red
-                    else -> R.drawable.score_gray
-                }
-                // LF-N hardening: numeric fills are MODEL-aware (the place's
-                // own registry source model). On a penalty scale HIGH is
-                // bad — the naive >=95/<=85 thresholds would paint the
-                // WORST penalty places green.
-                else -> when (com.kyronapp.kyron.data.NationalCoverage
-                    .numericTone(modelFor(p), p.score)) {
-                    1 -> R.drawable.score_green
-                    2 -> if (modelFor(p) == com.kyronapp.kyron.data.NationalCoverage.MODEL_SCORE_100_HIGH)
-                        R.drawable.score_lime else R.drawable.score_amber
-                    3 -> R.drawable.score_red
-                    else -> R.drawable.score_gray
-                }
-            }
-        )
+        badge.textSize = if (p.hasNumericScore) 24f else 11f
+        // Placard badge: white tile + score-colored band + condensed
+        // numeral — same tone as the pin (model-aware).
+        val fill = pinFill(p)
+        badge.setTextColor(fill)
+        root.findViewById<View>(R.id.sheet_band).setBackgroundColor(fill)
         val sourceName = SourceRegistry.byId(p.source)?.displayName
             ?: Regions.sourceDisplayName(p.source)
         root.findViewById<TextView>(R.id.sheet_name).text = p.name
