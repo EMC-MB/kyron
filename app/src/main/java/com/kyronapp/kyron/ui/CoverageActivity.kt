@@ -415,13 +415,17 @@ class CoverageActivity : AppCompatActivity() {
      *  silently fail on tap. */
     private fun probePackHosts() {
         scope.launch {
+            var dirty = false
+            var lastRender = 0L
             for (jur in jurisdictions) {
                 if (jur.packStatus != "published") continue
                 if (jur.packManifestUrl == null) continue
                 val reachable = probeOne(jur)
                 // Publication declared != verified downloadable: store the
-                // live verdict either way, then re-render immediately so
-                // the button ladder reflects the fresh result.
+                // live verdict either way. Re-render only when it changes
+                // (and throttled) — rebuilding the whole list per probe
+                // eats taps mid-rebuild.
+                val changed = liveProbe[jur.regionId] != reachable
                 liveProbe[jur.regionId] = reachable
                 if (reachable) {
                     status("${jur.name}'s pack host responded OK — download enabled.")
@@ -429,8 +433,16 @@ class CoverageActivity : AppCompatActivity() {
                     status("${jur.name}'s region-pack host responded with an error — " +
                         "its download cannot complete right now. Data on this device is unaffected.")
                 }
-                render()
+                val now = android.os.SystemClock.uptimeMillis()
+                if (changed && now - lastRender > 600) {
+                    render()
+                    lastRender = now
+                    dirty = false
+                } else if (changed) {
+                    dirty = true
+                }
             }
+            if (dirty) render()
         }
     }
 

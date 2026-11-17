@@ -866,7 +866,7 @@ class MapFragment : Fragment() {
         root.findViewById<TextView>(R.id.sheet_name).text = p.name
         root.findViewById<TextView>(R.id.sheet_meta).text = buildString {
             append(p.bandLabel)
-            if (p.date.isNotBlank()) append(" · inspected ${p.date}")
+            if (p.date.isNotBlank()) append(" · inspected ${Ui.fmtDate(p.date)}")
             if (p.inspections.size > 1) append(" · ${p.inspections.size} inspections")
             append("\n${sourceName}")
         }

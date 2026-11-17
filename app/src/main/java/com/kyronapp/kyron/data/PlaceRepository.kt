@@ -270,13 +270,26 @@ class PlaceRepository(private val context: Context) {
         // Zero hits now falls back to the (apostrophe-insensitive) LIKE
         // scan like any other FTS miss.
         if (ftsIds != null && ftsIds.isEmpty()) ftsIds = null
-        val like = if (text.isNotEmpty() && ftsIds == null) text else null
-        val found = catalog.search(
+        var like = if (text.isNotEmpty() && ftsIds == null) text else null
+        var found = catalog.search(
             db, ids = ftsIds, county = query.county,
             minScore = minScore, maxScore = maxScore,
             textLike = like, orderBy = orderBy, limit = query.limit,
             regionId = regionId
         )
+        // FTS matched rows, but the structured filters (region, county,
+        // band) reduced them to nothing — e.g. hits that all live in
+        // another state's pack. Give the substring scan the same second
+        // chance a zero-hit FTS result already gets.
+        if (found.isEmpty() && text.isNotEmpty() && like == null) {
+            like = text
+            found = catalog.search(
+                db, ids = null, county = query.county,
+                minScore = minScore, maxScore = maxScore,
+                textLike = like, orderBy = orderBy, limit = query.limit,
+                regionId = regionId
+            )
+        }
         catalog.attachInspections(db, found)
     }
 

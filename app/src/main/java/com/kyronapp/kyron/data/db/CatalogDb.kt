@@ -582,9 +582,14 @@ class CatalogDb(context: Context) :
         // "mcdonalds", which the alias in the index carries.
         val cleaned = stripApostrophes(text)
         if (cleaned.isBlank()) return null
+        // FTS4 prefix syntax is `token*` — a QUOTED "token"* silently
+        // drops the star and degrades to an exact-token match, so a
+        // "zaxby" query would never find "Zaxbys". Tokens are stripped
+        // down to non-special characters instead of being quoted.
         val query = cleaned.trim().split(Regex("\\s+"))
+            .map { it.replace(Regex("[^\\p{L}\\p{N}_]"), "") }
             .filter { it.isNotEmpty() }
-            .joinToString(" ") { "\"" + it.replace("\"", "\"\"") + "\"*" }
+            .joinToString(" ") { "$it*" }
         if (query.isEmpty()) return null
         return runCatching {
             db.rawQuery(
