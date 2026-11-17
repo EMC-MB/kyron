@@ -10,11 +10,28 @@
     <style name="Theme.Kyron" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">#1E6B38</item>
         <item name="colorPrimaryDark">#123C26</item>
-        <item name="colorAccent">#2E7D4F</item>
-        <item name="android:colorBackground">#F4F6F8</item>
+        <item name="colorAccent">#1E6B38</item>
+        <item name="colorControlActivated">#1E6B38</item>
+        <item name="android:colorBackground">#F7F9F7</item>
         <item name="android:statusBarColor">#123C26</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">#FFFFFF</item>
+        <item name="android:navigationBarColor">#F7F9F7</item>
         <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:fontFamily">@font/font_barlow</item>
+        <item name="buttonStyle">@style/KyronButton</item>
+        <item name="android:buttonStyle">@style/KyronButton</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="alertDialogTheme">@style/KyronDialog</item>
+        <item name="android:dialogTheme">@style/KyronDialog</item>
+        <item name="android:spinnerStyle">@style/KyronSpinner</item>
+    </style>
+
+    <style name="KyronDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">#1E6B38</item>
+        <item name="android:fontFamily">@font/font_barlow</item>
+        <item name="android:windowBackground">@drawable/dialog_bg</item>
+        <item name="buttonBarButtonStyle">@style/KyronButton.Text</item>
+        <item name="android:buttonBarButtonStyle">@style/KyronButton.Text</item>
     </style>
 </resources>
