@@ -224,6 +224,11 @@ class PlaceRepository(private val context: Context) {
     fun regionPlaceCount(regionId: String): Int =
         catalog.regionPlaceCount(catalog.readableDatabase, regionId)
 
+    /** All regions' place counts in one query — Coverage's render loop
+     *  must not run a COUNT(*) per jurisdiction on the main thread. */
+    fun regionCounts(): Map<String, Int> =
+        catalog.regionCounts(catalog.readableDatabase)
+
     fun installedRegionVersion(regionId: String): String? =
         packs.installedVersion(catalog.readableDatabase, regionId)
 

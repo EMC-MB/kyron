@@ -198,6 +198,16 @@ class CatalogDb(context: Context) :
             if (c.moveToFirst()) c.getInt(0) else 0
         }
 
+    /** All regions' place counts in ONE query — Coverage renders ~50
+     *  jurisdiction rows; a per-row COUNT(*) runs 50 sequential SQLite
+     *  scans on the main thread (and again on every search keystroke). */
+    fun regionCounts(db: SQLiteDatabase): Map<String, Int> =
+        db.rawQuery("SELECT region_id, COUNT(*) FROM places GROUP BY region_id", null).use { c ->
+            val out = HashMap<String, Int>()
+            while (c.moveToNext()) out[c.getString(0)] = c.getInt(1)
+            out
+        }
+
     fun regionIds(db: SQLiteDatabase): List<String> =
         db.rawQuery("SELECT DISTINCT region_id FROM places ORDER BY region_id", null).use { c ->
             val out = mutableListOf<String>()

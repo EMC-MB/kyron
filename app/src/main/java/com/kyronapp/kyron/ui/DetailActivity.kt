@@ -42,9 +42,18 @@ class DetailActivity : AppCompatActivity() {
         // caller passed one; rendering starts it regardless.
         postponeEnterTransition()
         scope.launch {
-            app.repository.load()
-            render()
-            startPostponedEnterTransition()
+            try {
+                app.repository.load()
+                render()
+            } catch (e: Exception) {
+                // A load failure must not wedge the screen — render an
+                // honest error instead of leaving the activity blank.
+                findViewById<TextView>(R.id.d_name).text = "Couldn't load this place"
+            } finally {
+                // The postponed transition MUST start in every path —
+                // skipping it leaves the window permanently blank.
+                startPostponedEnterTransition()
+            }
         }
     }
 
@@ -160,7 +169,7 @@ class DetailActivity : AppCompatActivity() {
                 "has no inspection result on file"
             }
             val shareText = "${place.name} $resultText" +
-                (if (place.date.isNotBlank()) " — inspected ${place.date}." else ".") +
+                (if (place.date.isNotBlank()) " — inspected ${Ui.fmtDate(place.date)}." else ".") +
                 " ${place.fullAddress()}. Tracked with Kyron."
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"

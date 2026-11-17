@@ -109,6 +109,10 @@ class CoverageActivity : AppCompatActivity() {
         val density = resources.displayMetrics.density
         fun dp(v: Int): Int = (v * density).toInt()
         val activeId = app.regions.activeRegionId()
+        // One GROUP BY for every jurisdiction's installed count — a
+        // per-row regionPlaceCount() ran a SQLite query per card (~51×),
+        // re-done on every search keystroke and every probe render.
+        val counts = app.repository.regionCounts()
         val coverage = if (jurisdictions.isEmpty())
             com.kyronapp.kyron.data.NationalCoverage.load(this) else jurisdictions
         for (jur in coverage) {
@@ -124,7 +128,7 @@ class CoverageActivity : AppCompatActivity() {
             val info = Regions.byId(jur.regionId)
                 ?: Regions.fromRegistry(applicationContext, jur.regionId)
             val regionId = jur.regionId
-            val installedCount = if (info != null) app.repository.regionPlaceCount(regionId) else 0
+            val installedCount = if (info != null) counts[regionId] ?: 0 else 0
             val installed = info != null && (info.bundled || installedCount > 0)
             val isActive = regionId == activeId && info != null
 
@@ -565,23 +569,35 @@ class CoverageActivity : AppCompatActivity() {
 
     private fun fetchText(url: String): String {
         val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = 15_000
-        conn.readTimeout = 30_000
-        return conn.inputStream.bufferedReader().use { it.readText() }
+        try {
+            conn.connectTimeout = 15_000
+            conn.readTimeout = 30_000
+            return conn.inputStream.bufferedReader().use { it.readText() }
+        } finally {
+            conn.disconnect()
+        }
     }
 
     private fun fetchBytes(url: String): ByteArray {
         val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = 15_000
-        conn.readTimeout = 30_000
-        return conn.inputStream.use { it.readBytes() }
+        try {
+            conn.connectTimeout = 15_000
+            conn.readTimeout = 30_000
+            return conn.inputStream.use { it.readBytes() }
+        } finally {
+            conn.disconnect()
+        }
     }
 
     private fun fetchToFile(url: String, out: File) {
         val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = 15_000
-        conn.readTimeout = 120_000
-        conn.inputStream.use { input -> out.outputStream().use { input.copyTo(it) } }
+        try {
+            conn.connectTimeout = 15_000
+            conn.readTimeout = 120_000
+            conn.inputStream.use { input -> out.outputStream().use { input.copyTo(it) } }
+        } finally {
+            conn.disconnect()
+        }
     }
 
     // -------------------------------------------------------------- GPS

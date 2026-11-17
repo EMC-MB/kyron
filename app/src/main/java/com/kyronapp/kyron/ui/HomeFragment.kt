@@ -90,6 +90,22 @@ class HomeFragment : Fragment() {
 
     private var playedIntro = false
 
+    // Per-place result model, resolved at source level — watched places
+    // can come from a region other than the active one (a favorite
+    // outlives a switch), so tone is never borrowed from the active
+    // region's scale.
+    private var cachedStates: List<NationalCoverage.Jurisdiction>? = null
+    private fun statesForModels(): List<NationalCoverage.Jurisdiction> {
+        cachedStates ?: run {
+            cachedStates = NationalCoverage.cached()
+                ?: runCatching { NationalCoverage.load(requireContext()) }
+                    .getOrDefault(emptyList())
+        }
+        return cachedStates ?: emptyList()
+    }
+    private fun modelFor(p: com.kyronapp.kyron.data.Place): String =
+        NationalCoverage.modelForPlace(statesForModels(), p)
+
     override fun onResume() {
         super.onResume()
         val app = (activity?.application as? KyronApplication) ?: return
@@ -149,10 +165,22 @@ class HomeFragment : Fragment() {
         }
 
         // "Watching": the integrated Favorites surface — starred places
-        // with their current result, worst-looking first.
+        // with their current result, worst-looking first. "Worst" is
+        // judged in EACH place's own region model — favorites outlive
+        // region switches, and on a penalty scale HIGH is bad.
         val watched = app.repository.places.value
             .filter { app.prefs.favorites.contains(it.id) }
-            .sortedWith(compareBy { if (it.hasNumericScore) it.score else Int.MAX_VALUE })
+            .sortedWith(
+                compareByDescending<com.kyronapp.kyron.data.Place> { p ->
+                    if (p.hasNumericScore)
+                        NationalCoverage.numericTone(modelFor(p), p.score)
+                    else p.resultTone
+                }.thenBy { p ->
+                    if (!p.hasNumericScore) Int.MAX_VALUE
+                    else if (modelFor(p) == NationalCoverage.MODEL_PENALTY_LOW) -p.score
+                    else p.score
+                }
+            )
         bindWatch(watched, model)
 
         // "Needs attention": the region's worst current results, sorted
@@ -183,7 +211,7 @@ class HomeFragment : Fragment() {
         view?.findViewById<TextView>(R.id.home_watch_title)?.text =
             getString(R.string.home_watch_title, places.size)
         places.take(8).forEach { p ->
-            list.addView(placeRow(p, model))
+            list.addView(placeRow(p, modelFor(p)))
         }
     }
 
@@ -203,7 +231,7 @@ class HomeFragment : Fragment() {
         view?.findViewById<TextView>(R.id.home_needs_title)?.text =
             getString(R.string.home_needs_title, regionName)
         places.forEach { p ->
-            list.addView(placeRow(p, model))
+            list.addView(placeRow(p, modelFor(p)))
         }
     }
 

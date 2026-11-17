@@ -70,6 +70,28 @@ class AlertsActivity : AppCompatActivity() {
             Triple("Auburn", 32.6099, -85.4808),
             Triple("Tuscaloosa", 33.2098, -87.5692)
         )
+
+        /** Preset area centers are per-region — showing Alabama cities
+         *  to a Mississippi user would set a meaningless center. */
+        private val MS_PRESETS = listOf(
+            Triple("Jackson", 32.2988, -90.1848),
+            Triple("Southaven", 34.9889, -90.0126),
+            Triple("Olive Branch", 34.9618, -89.8295),
+            Triple("Tupelo", 34.2576, -88.7034),
+            Triple("Oxford", 34.3665, -89.5192),
+            Triple("Starkville", 33.4505, -88.8184),
+            Triple("Hattiesburg", 31.3271, -89.2903),
+            Triple("Gulfport", 30.3674, -89.0928),
+            Triple("Biloxi", 30.3960, -88.8853),
+            Triple("Meridian", 32.3643, -88.7037),
+            Triple("Vicksburg", 32.3526, -90.8779)
+        )
+
+        fun presetsFor(regionId: String): List<Triple<String, Double, Double>> = when (regionId) {
+            "us-al" -> HOME_PRESETS
+            "us-ms" -> MS_PRESETS
+            else -> emptyList()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -164,7 +186,9 @@ class AlertsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.home_label).text = "Area center: ${prefs.homeLabel}"
         val presetBox = findViewById<GridLayout>(R.id.preset_box)
         presetBox.removeAllViews()
-        for ((label, la, ln) in HOME_PRESETS) {
+        val presets = presetsFor(app.regions.activeRegionId())
+        presetBox.visibility = if (presets.isEmpty()) View.GONE else View.VISIBLE
+        for ((label, la, ln) in presets) {
             val chip = ToggleButton(this).apply {
                 minHeight = (48f * resources.displayMetrics.density).toInt()
                 textOn = label
@@ -287,7 +311,18 @@ class AlertsActivity : AppCompatActivity() {
     /** Searchable multi-select county picker. Changes apply only on
      *  Done — Cancel leaves the rule untouched. */
     private fun showCountyPicker() {
-        val all = app.repository.counties("us-al")
+        // Counties of the ACTIVE region — never hardcoded. Some packs
+        // don't carry a county field at all (Mississippi rows have none),
+        // so an empty list gets an honest answer, not a dead picker.
+        val all = app.repository.counties(app.regions.activeRegionId())
+        if (all.isEmpty()) {
+            Toast.makeText(
+                this,
+                "This region's data doesn't include county names — the radius rule still applies.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
         val working = app.prefs.monitoredCounties.toMutableSet()
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_county_picker)
