@@ -14,12 +14,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.core.app.ActivityOptionsCompat
+import androidx.dynamicanimation.animation.DynamicAnimation
 import com.kyronapp.kyron.ui.AccountFragment
+import com.kyronapp.kyron.ui.AlertsActivity
 import com.kyronapp.kyron.ui.BrowseFragment
 import com.kyronapp.kyron.ui.CoverageActivity
 import com.kyronapp.kyron.ui.DetailActivity
 import com.kyronapp.kyron.ui.HomeFragment
 import com.kyronapp.kyron.ui.MapFragment
+import com.kyronapp.kyron.ui.Ui
 import com.kyronapp.kyron.worker.SyncEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -67,7 +71,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         tabIds.forEachIndexed { idx, id ->
-            findViewById<TextView>(id).setOnClickListener { selectTab(idx) }
+            findViewById<TextView>(id).setOnClickListener {
+                it.let(Ui::haptic)
+                selectTab(idx)
+            }
+        }
+        findViewById<android.widget.ImageButton>(R.id.notif_btn).setOnClickListener {
+            startActivity(Intent(this, AlertsActivity::class.java))
         }
         // Region chip (LF-4): shows the active region everywhere; tapping
         // it opens Coverage, where states are picked/downloaded. The chip
@@ -78,8 +88,7 @@ class MainActivity : AppCompatActivity() {
         }
         scope.launch {
             app.regions.activeRegion.collect {
-                // ▾ signals the chip is tappable — it opens Coverage.
-                chip.text = "${app.regions.activeInfo().displayName} ▾"
+                chip.text = app.regions.activeInfo().displayName
             }
         }
         selectTab(0)
@@ -150,6 +159,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         litTab = i
+        moveDockIndicator(i)
         val target = frags[i]
             ?: supportFragmentManager.findFragmentByTag("tab$i")
             ?: when (i) {
@@ -175,6 +185,25 @@ class MainActivity : AppCompatActivity() {
         }
         tx.setMaxLifecycle(target, Lifecycle.State.RESUMED)
         tx.commit()
+    }
+
+    private var indicatorReady = false
+
+    /** Slides the little bar under the dock to the active tab — springs
+     *  on user switches, snaps on first layout / reduced motion. */
+    private fun moveDockIndicator(i: Int) {
+        val ind = findViewById<android.view.View>(R.id.dock_indicator) ?: return
+        val dock = findViewById<android.view.View>(R.id.dock) ?: return
+        val tab = findViewById<android.view.View>(tabIds[i]) ?: return
+        dock.post {
+            val target = dock.left + tab.left + (tab.width - ind.width) / 2f
+            if (!indicatorReady || Ui.reduceMotion(this)) {
+                ind.x = target
+            } else {
+                Ui.springTo(ind, DynamicAnimation.X, target, stiffness = 700f, damping = 0.72f)
+            }
+            indicatorReady = true
+        }
     }
 
     private fun maybeShowWelcome() {
@@ -211,10 +240,17 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    fun openPlace(placeId: String) {
+    fun openPlace(placeId: String, sharedView: android.view.View? = null) {
         val intent = Intent(this, DetailActivity::class.java)
             .putExtra(DetailActivity.EXTRA_PLACE_ID, placeId)
-        startActivity(intent)
+        if (sharedView != null) {
+            val opts = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                this, sharedView, "placard"
+            )
+            startActivity(intent, opts.toBundle())
+        } else {
+            startActivity(intent)
+        }
     }
 
     fun startSync(includeCounties: Boolean, onDone: (() -> Unit)? = null) {
