@@ -128,13 +128,13 @@
    "name": "Georgia",
    "type": "state",
    "result_model": "SCORE_100_HIGH",
-   "summary": "Pack verified end-to-end in the rig and registered in-app; the publication is declared but the host returned HTTP 404 on 2026-10-22 (declared-only, not verified downloadable).",
+   "summary": "Pack published to the data-packs release, artifact sha256-verified 2026-11-17 (36,175 places).",
    "pack_status": "published",
    "pack_manifest_url": "https://github.com/EMC-MB/kyron/releases/download/data-packs/us-ga.manifest.json",
-   "pack_availability": "declared-only",
-   "artifact_verified": "",
-   "pack_host_status": "unreachable-404",
-   "pack_host_checked": "2026-10-22",
+   "pack_availability": "downloadable-verified",
+   "artifact_verified": "2026-11-17",
+   "pack_host_status": "reachable",
+   "pack_host_checked": "2026-11-17",
    "center": {
     "lat": 32.68,
     "lng": -83.23
@@ -153,8 +153,8 @@
      "verified": "2026-10-13",
      "blocker": "",
      "restrictions": "Gwinnett, Newton and Rockdale counties are NOT in the statewide search.",
-     "refresh": "Harvest pipeline harvest/ga -> tools/packs/build_pack.py",
-     "last_refresh": "",
+     "refresh": "Harvest pipeline None",
+     "last_refresh": "2026-11-17",
      "notes": "100-point scale with A/B/C/U grades; full inspector notes."
     }
    ]
@@ -1388,13 +1388,13 @@
    "name": "Montana",
    "type": "state",
    "result_model": "VIOLATIONS_ONLY",
-   "summary": "State-endorsed vendor dashboard plus ~26 independent counties.",
-   "pack_status": "none",
-   "pack_manifest_url": null,
-   "pack_availability": "none",
-   "artifact_verified": "",
-   "pack_host_status": "",
-   "pack_host_checked": "",
+   "summary": "Pack published to the data-packs release, artifact sha256-verified 2026-11-17 (278 places).",
+   "pack_status": "published",
+   "pack_manifest_url": "https://github.com/EMC-MB/kyron/releases/download/data-packs/us-mt.manifest.json",
+   "pack_availability": "downloadable-verified",
+   "artifact_verified": "2026-11-17",
+   "pack_host_status": "reachable",
+   "pack_host_checked": "2026-11-17",
    "center": {
     "lat": 46.68,
     "lng": -110.05
@@ -1409,12 +1409,12 @@
      "violations": "partial",
      "history": "some-history",
      "result_model": "VIOLATIONS_ONLY",
-     "status": "source-verified",
+     "status": "pack-built",
      "verified": "2026-10-22",
      "blocker": "",
      "restrictions": "",
-     "refresh": "",
-     "last_refresh": "",
+     "refresh": "Harvest pipeline harvest/mhd",
+     "last_refresh": "2026-11-17",
      "notes": "DPHHS page (fetched 200) links the state-endorsed myhealthdepartment.com/montana dashboard; ~26 other counties run their own."
     }
    ]
