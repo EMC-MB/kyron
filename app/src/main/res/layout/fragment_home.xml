@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg"
@@ -8,149 +9,169 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipToPadding="false"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingBottom="28dp">
 
-        <!-- Greeting: time-of-day + the region being viewed. -->
-        <TextView
-            android:id="@+id/home_greeting"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/ink"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/home_region_sub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="@color/muted"
-            android:textSize="14sp" />
-
-        <!-- Hero search: same pill as Browse; submitting routes to the
-             Browse tab with the query pre-filled. -->
-        <EditText
-            android:id="@+id/home_search"
+        <!-- Forest hero: greeting + region context + the search that
+             routes into Browse. The stat card overlaps the band's bottom
+             edge so the page reads as one composition, not stacked cards. -->
+        <LinearLayout
+            android:id="@+id/home_hero"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/search_pill"
-            android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="8dp"
-            android:hint="@string/home_search_hint"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/ink"
-            android:textColorHint="@color/muted"
-            android:textSize="15sp" />
+            android:layout_height="wrap_content"
+            android:background="@color/kyron_dark"
+            android:orientation="vertical"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="38dp">
 
-        <!-- Stat strip: honest counts for the ACTIVE region only. -->
+            <TextView
+                android:id="@+id/home_greeting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/font_barlow_condensed"
+                android:textColor="@color/white"
+                android:textFontWeight="600"
+                android:textSize="30sp" />
+
+            <TextView
+                android:id="@+id/home_region_sub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/on_forest_soft"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/home_search"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/search_pill"
+                android:drawableStart="@drawable/ic_search"
+                android:drawablePadding="8dp"
+                android:drawableTint="@color/kyron_primary"
+                android:elevation="3dp"
+                android:hint="@string/home_search_hint"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/ink"
+                android:textColorHint="@color/muted"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <!-- Stat strip: honest counts for the ACTIVE region only — one
+             elevated card, three cells. -->
         <LinearLayout
             android:id="@+id/home_stats"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layoutAnimation="@anim/layout_fall_down"
-            android:orientation="horizontal">
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="-26dp"
+            android:background="@drawable/card_bg"
+            android:elevation="3dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="14dp">
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/card_bg"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/stat_places"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/kyron_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/font_barlow_condensed"
+                    android:textColor="@color/ink"
+                    android:textFontWeight="700"
+                    android:textSize="22sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="1dp"
                     android:text="@string/home_stat_places"
                     android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:textSize="11.5sp" />
             </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="30dp"
+                android:background="@color/line" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:background="@drawable/card_bg"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/stat_watched"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/kyron_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/font_barlow_condensed"
+                    android:textColor="@color/ink"
+                    android:textFontWeight="700"
+                    android:textSize="22sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="1dp"
                     android:text="@string/home_stat_watched"
                     android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:textSize="11.5sp" />
             </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="30dp"
+                android:background="@color/line" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:background="@drawable/card_bg"
                 android:gravity="center"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/stat_sync"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/kyron_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/font_barlow_condensed"
+                    android:textColor="@color/ink"
+                    android:textFontWeight="700"
+                    android:textSize="20sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="1dp"
                     android:text="@string/home_stat_sync"
                     android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:textSize="11.5sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Action cards: 2x2 grid, each routes to its tab (or Coverage). -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:text="@string/home_actions_title"
-            android:textColor="@color/ink"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
+        <!-- Quick actions: four icon tiles — lighter than cards, keeps
+             every entry point. -->
         <LinearLayout
+            android:id="@+id/home_tiles"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginTop="20dp"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -158,171 +179,150 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/card_bg"
+                android:background="@drawable/btn_text_ripple"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center_vertical"
+                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="14dp"
-                android:stateListAnimator="@animator/press_scale">
+                android:paddingVertical="8dp">
 
-                <ImageView
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:src="@drawable/ic_search"
-                    app:tint="@color/kyron_primary"
-                    xmlns:app="http://schemas.android.com/apk/res-auto" />
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/tile_circle">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_search"
+                        app:tint="@color/kyron_primary" />
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/home_action_browse"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/nav_browse"
                     android:textColor="@color/ink"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/home_action_browse_sub"
-                    android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:textFontWeight="600"
+                    android:textSize="12.5sp" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/action_map"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:background="@drawable/card_bg"
+                android:background="@drawable/btn_text_ripple"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center_vertical"
+                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="14dp"
-                android:stateListAnimator="@animator/press_scale">
+                android:paddingVertical="8dp">
 
-                <ImageView
-                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:src="@drawable/ic_map"
-                    app:tint="@color/kyron_primary" />
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/tile_circle">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_map"
+                        app:tint="@color/kyron_primary" />
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/home_action_map"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/nav_map"
                     android:textColor="@color/ink"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/home_action_map_sub"
-                    android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:textFontWeight="600"
+                    android:textSize="12.5sp" />
             </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
 
             <LinearLayout
                 android:id="@+id/action_watch"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/card_bg"
+                android:background="@drawable/btn_text_ripple"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center_vertical"
+                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="14dp"
-                android:stateListAnimator="@animator/press_scale">
+                android:paddingVertical="8dp">
 
-                <ImageView
-                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:src="@drawable/ic_notifications"
-                    app:tint="@color/kyron_primary" />
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/tile_circle">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_notifications"
+                        app:tint="@color/kyron_primary" />
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/home_action_watch"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/nav_alerts"
                     android:textColor="@color/ink"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/home_action_watch_sub"
-                    android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:textFontWeight="600"
+                    android:textSize="12.5sp" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/action_regions"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:background="@drawable/card_bg"
+                android:background="@drawable/btn_text_ripple"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center_vertical"
+                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="14dp"
-                android:stateListAnimator="@animator/press_scale">
+                android:paddingVertical="8dp">
 
-                <ImageView
-                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:src="@drawable/ic_download"
-                    app:tint="@color/kyron_primary" />
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/tile_circle">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_download"
+                        app:tint="@color/kyron_primary" />
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/home_action_regions"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/home_tile_regions"
                     android:textColor="@color/ink"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/home_action_regions_sub"
-                    android:textColor="@color/muted"
-                    android:textSize="11sp" />
+                    android:textFontWeight="600"
+                    android:textSize="12.5sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- How the active region's results read — model-aware and honest.
-             A colored key row sits under the text: users see the scale
-             (good/warn/bad) instead of decoding a paragraph. -->
+        <!-- How the active region's results read — model-aware and honest. -->
         <LinearLayout
+            android:id="@+id/home_model_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:background="@drawable/card_bg"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/card_green_bg"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -331,8 +331,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/ink"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600"
+                android:textSize="14.5sp" />
 
             <LinearLayout
                 android:id="@+id/home_model_key"
@@ -352,14 +352,13 @@
                 android:textSize="12.5sp" />
         </LinearLayout>
 
-        <!-- Watched places: the integrated Favorites surface. Shows the
-             user's starred places (newest scores first); hidden when the
-             watch list is empty — the Watching stat covers that state. -->
+        <!-- Watched places: the integrated Favorites surface. -->
         <LinearLayout
             android:id="@+id/home_watch_block"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="24dp"
             android:orientation="vertical"
             android:visibility="gone">
 
@@ -368,8 +367,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/ink"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600"
+                android:textSize="17sp" />
 
             <LinearLayout
                 android:id="@+id/home_watch_list"
@@ -379,13 +378,13 @@
                 android:orientation="vertical" />
         </LinearLayout>
 
-        <!-- Worst current results in the active region — the genuinely
-             actionable list. Hidden when the region has no places. -->
+        <!-- Worst current results in the active region. -->
         <LinearLayout
             android:id="@+id/home_needs_block"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="24dp"
             android:orientation="vertical"
             android:visibility="gone">
 
@@ -394,8 +393,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/ink"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600"
+                android:textSize="17sp" />
 
             <LinearLayout
                 android:id="@+id/home_needs_list"

@@ -24,9 +24,8 @@
             android:textSize="13.5sp" />
 
         <Button
-            android:textAllCaps="false"
-            android:stateListAnimator="@animator/press_scale"
             android:id="@+id/guide_dismiss"
+            style="@style/KyronButton.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
@@ -76,7 +75,11 @@
                 android:id="@+id/band_all"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"
+                android:minHeight="40dp"
+                android:minWidth="0dp"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:textSize="13.5sp"
                 android:textOff="@string/filter_all_scores"
                 android:textOn="@string/filter_all_scores" />
 
@@ -84,8 +87,12 @@
                 android:id="@+id/band_low"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:minHeight="48dp"
+                android:layout_marginStart="8dp"
+                android:minHeight="40dp"
+                android:minWidth="0dp"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:textSize="13.5sp"
                 android:textOff="@string/filter_below_85"
                 android:textOn="@string/filter_below_85" />
 
@@ -93,8 +100,12 @@
                 android:id="@+id/band_mid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:minHeight="48dp"
+                android:layout_marginStart="8dp"
+                android:minHeight="40dp"
+                android:minWidth="0dp"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:textSize="13.5sp"
                 android:textOff="@string/filter_85_94"
                 android:textOn="@string/filter_85_94" />
 
@@ -102,8 +113,12 @@
                 android:id="@+id/band_high"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:minHeight="48dp"
+                android:layout_marginStart="8dp"
+                android:minHeight="40dp"
+                android:minWidth="0dp"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:textSize="13.5sp"
                 android:textOff="@string/filter_95_plus"
                 android:textOn="@string/filter_95_plus" />
         </LinearLayout>
@@ -177,22 +192,18 @@
             android:textSize="12.5sp" />
 
         <!-- Refresh (classic replacement for pull-to-refresh): runs the
-             same MainActivity sync; the follow-up query re-renders the
-             list and this button returns to its idle label when done. -->
-        <Button
+             same MainActivity sync; the icon spins until the sync's
+             completion callback re-queries and stops it. -->
+        <ImageButton
             android:id="@+id/refresh_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/btn_ghost"
-            android:minWidth="0dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:stateListAnimator="@animator/press_scale"
-            android:text="@string/action_refresh"
-            android:textAllCaps="false"
-            android:textColor="@color/kyron_primary"
-            android:textSize="13sp" />
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/icon_circle_bg"
+            android:contentDescription="@string/action_refresh"
+            android:padding="9dp"
+            android:src="@drawable/ic_sync"
+            app:tint="@color/kyron_primary" />
     </LinearLayout>
 
     <LinearLayout

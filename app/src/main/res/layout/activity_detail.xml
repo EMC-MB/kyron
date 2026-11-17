@@ -1,34 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg"
     android:orientation="vertical">
-
-    <!-- Header bar (classic): back button + title. -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/kyron_dark"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/d_back"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/cd_back"
-            android:src="@drawable/ic_arrow_back" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/detail_title"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -38,228 +14,343 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:orientation="vertical">
+
+            <!-- Forest hero: icon row + the score placard rendered like
+                 the posted inspection card — band, condensed numeral,
+                 meter ticked at the reinspection line. transitionName
+                 pairs with the list placard for the shared grow. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/kyron_dark"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingBottom="26dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/d_back"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/cd_back"
+                        android:src="@drawable/ic_arrow_back"
+                        app:tint="@color/white" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <ImageButton
+                        android:id="@+id/d_share"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/action_share"
+                        android:src="@drawable/ic_share"
+                        app:tint="@color/white" />
+
+                    <ImageButton
+                        android:id="@+id/d_fav"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/cd_watch"
+                        android:padding="11dp"
+                        android:src="@drawable/ic_star_border" />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/d_placard"
+                    android:layout_width="170dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/placard_tile"
+                    android:clipToOutline="true"
+                    android:elevation="4dp"
+                    android:transitionName="placard">
+
+                    <View
+                        android:id="@+id/d_band"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_gravity="top" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
+
+                        <TextView
+                            android:id="@+id/d_score"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/font_barlow_condensed"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:textFontWeight="700"
+                            android:textSize="54sp" />
+
+                        <TextView
+                            android:id="@+id/d_score_label"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:textAllCaps="true"
+                            android:textColor="@color/muted"
+                            android:textSize="11sp" />
+
+                        <!-- Meter: only for 0–100-scale regions — track,
+                             fill, and the 85-point reinspection tick. -->
+                        <FrameLayout
+                            android:id="@+id/d_meter"
+                            android:layout_width="match_parent"
+                            android:layout_height="10dp"
+                            android:layout_marginHorizontal="18dp"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/meter_track"
+                            android:clipToOutline="true">
+
+                            <View
+                                android:id="@+id/d_meter_fill"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="start" />
+
+                            <View
+                                android:id="@+id/d_meter_tick"
+                                android:layout_width="2dp"
+                                android:layout_height="match_parent"
+                                android:background="@color/ink" />
+                        </FrameLayout>
+                    </LinearLayout>
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/d_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:textColor="@color/white"
+                    android:textFontWeight="600"
+                    android:textSize="21sp" />
+
+                <TextView
+                    android:id="@+id/d_addr"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:gravity="center"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:textColor="@color/on_forest_soft"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/d_meta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:textColor="@color/on_forest_soft"
+                    android:textSize="12.5sp" />
+
+                <TextView
+                    android:id="@+id/d_source"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:gravity="center"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:textColor="@color/on_forest_soft"
+                    android:textSize="11.5sp" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/card_bg"
                 android:orientation="vertical"
                 android:padding="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/d_score"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:gravity="center"
-                        android:textColor="@color/white"
-                        android:textSize="26sp"
-                        android:textStyle="bold" />
+                    android:background="@drawable/card_bg"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="horizontal">
 
-                        <TextView
-                            android:id="@+id/d_name"
-                            android:layout_width="match_parent"
+                        <Button
+                            android:id="@+id/d_watch"
+                            style="@style/KyronButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:text="@string/action_watch" />
 
-                        <TextView
-                            android:id="@+id/d_addr"
-                            android:layout_width="match_parent"
+                        <Button
+                            android:id="@+id/d_directions"
+                            style="@style/KyronButton.Primary"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/muted"
-                            android:textSize="13sp" />
-
-                        <TextView
-                            android:id="@+id/d_meta"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/muted"
-                            android:textSize="13sp" />
-
-                        <TextView
-                            android:id="@+id/d_source"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/muted"
-                            android:textSize="12sp" />
+                            android:layout_marginStart="8dp"
+                            android:drawableStart="@drawable/ic_directions"
+                            android:drawablePadding="4dp"
+                            android:drawableTint="@color/white"
+                            android:text="@string/action_directions" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/d_watch_note"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/muted"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/d_history_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/card_bg"
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/d_history_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/detail_history_title"
+                        android:textColor="@color/ink"
+                        android:textFontWeight="600"
+                        android:textSize="15.5sp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/d_history_line"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="@color/muted"
+                        android:textSize="12.5sp"
+                        android:visibility="gone" />
+
+                    <HorizontalScrollView
+                        android:id="@+id/d_history_scroll"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:scrollbars="none"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:id="@+id/d_history_chips"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal" />
+                    </HorizontalScrollView>
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
+                    android:background="@drawable/card_green_bg"
+                    android:orientation="vertical"
+                    android:padding="14dp">
 
-                    <Button
-                        android:textAllCaps="false"
-                        android:stateListAnimator="@animator/press_scale"
-                        android:id="@+id/d_fav"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="@string/action_watch" />
-
-                    <Button
-                        android:textAllCaps="false"
-                        android:stateListAnimator="@animator/press_scale"
-                        android:id="@+id/d_directions"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="@string/action_directions" />
-
-                    <Button
-                        android:textAllCaps="false"
-                        android:stateListAnimator="@animator/press_scale"
-                        android:id="@+id/d_share"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="@string/action_share" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/d_watch_note"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textColor="@color/muted"
-                    android:textSize="12.5sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/d_history_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/card_bg"
-                android:orientation="vertical"
-                android:padding="14dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/d_history_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/detail_history_title"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/d_history_line"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="@color/muted"
-                    android:textSize="12.5sp"
-                    android:visibility="gone" />
-
-                <HorizontalScrollView
-                    android:id="@+id/d_history_scroll"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:scrollbars="none"
-                    android:visibility="gone">
-
-                    <LinearLayout
-                        android:id="@+id/d_history_chips"
+                    <TextView
+                        android:id="@+id/d_why_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
-                </HorizontalScrollView>
-            </LinearLayout>
+                        android:textColor="@color/ink"
+                        android:textFontWeight="600"
+                        android:textSize="15.5sp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/card_green_bg"
-                android:orientation="vertical"
-                android:padding="14dp">
+                    <TextView
+                        android:id="@+id/d_why"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/ink_soft"
+                        android:textSize="14sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/d_why_title"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/d_viol_card"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/card_bg"
+                    android:orientation="vertical"
+                    android:padding="14dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/detail_violations_title"
+                        android:textColor="@color/ink"
+                        android:textFontWeight="600"
+                        android:textSize="15.5sp" />
+
+                    <LinearLayout
+                        android:id="@+id/d_viol_box"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/d_load"
+                    style="@style/KyronButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/action_load_full_details"
+                    android:visibility="gone" />
 
                 <TextView
-                    android:id="@+id/d_why"
+                    android:id="@+id/d_load_msg"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/d_viol_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/card_bg"
-                android:orientation="vertical"
-                android:padding="14dp"
-                android:visibility="gone">
+                    android:textColor="@color/tone_red"
+                    android:textSize="13sp" />
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/detail_violations_title"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:id="@+id/d_viol_box"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                    android:layout_marginTop="14dp"
+                    android:gravity="center"
+                    android:text="@string/detail_scores_note"
+                    android:textColor="@color/muted"
+                    android:textSize="12sp" />
             </LinearLayout>
-
-            <Button
-                android:textAllCaps="false"
-                android:stateListAnimator="@animator/press_scale"
-                android:id="@+id/d_load"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/action_load_full_details"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/d_load_msg"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/kyron_red"
-                android:textSize="13sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/detail_scores_note"
-                android:textColor="@color/muted"
-                android:textSize="12sp" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

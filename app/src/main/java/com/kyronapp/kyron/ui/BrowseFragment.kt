@@ -49,7 +49,7 @@ class BrowseFragment : Fragment() {
     private lateinit var app: KyronApplication
     private lateinit var adapter: PlaceAdapter
     private lateinit var listView: RecyclerView
-    private lateinit var refreshBtn: Button
+    private lateinit var refreshBtn: android.widget.ImageButton
     private lateinit var emptyBox: View
     private lateinit var loadingBox: View
     private lateinit var countLabel: TextView
@@ -102,7 +102,9 @@ class BrowseFragment : Fragment() {
         searchField = v.findViewById(R.id.search)
 
         adapter = PlaceAdapter(
-            onOpen = { p -> (activity as? MainActivity)?.openPlace(p.id) },
+            onOpen = { p, shared ->
+                (activity as? MainActivity)?.openPlace(p.id, shared)
+            },
             onToggleFavorite = { p ->
                 app.prefs.toggleFavorite(p.id)
                 applyFilters()
@@ -178,14 +180,14 @@ class BrowseFragment : Fragment() {
             val act = activity as? MainActivity
             if (act != null) {
                 // Honest refresh (the pull-to-refresh contract, kept):
-                // the button shows progress until the sync completes,
-                // then the follow-up query re-renders the list.
+                // the icon spins until the sync's completion callback
+                // re-queries the list.
                 refreshBtn.isEnabled = false
-                refreshBtn.text = "Refreshing…"
+                startSpin()
                 act.startSync(includeCounties = false) {
                     if (isAdded) {
                         refreshBtn.isEnabled = true
-                        refreshBtn.text = "Refresh"
+                        stopSpin()
                         applyFilters()
                     }
                 }
@@ -222,6 +224,27 @@ class BrowseFragment : Fragment() {
         }
     }
 
+    private var spin: android.animation.ObjectAnimator? = null
+
+    private fun startSpin() {
+        if (Ui.reduceMotion(requireContext())) return
+        spin?.cancel()
+        spin = android.animation.ObjectAnimator.ofFloat(
+            refreshBtn, View.ROTATION, 0f, 360f
+        ).apply {
+            duration = 900
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            interpolator = android.view.animation.LinearInterpolator()
+            start()
+        }
+    }
+
+    private fun stopSpin() {
+        spin?.cancel()
+        spin = null
+        if (::refreshBtn.isInitialized) refreshBtn.rotation = 0f
+    }
+
     private fun bandLabel(id: Int): String {
         // LF-N: chip labels come from the ACTIVE region's own result
         // model ("Below 85" on a 0–100 scale; "14–27" penalty points on
@@ -239,16 +262,15 @@ class BrowseFragment : Fragment() {
     /** Radio behavior for the band toggle row. */
     private fun selectBand(selectedId: Int) {
         if (!::bandButtons.isInitialized) return
+        val on = androidx.core.content.ContextCompat.getColor(
+            requireContext(), R.color.kyron_primary)
         val off = androidx.core.content.ContextCompat.getColor(
-            requireContext(), R.color.ink)
-        val white = androidx.core.content.ContextCompat.getColor(
-            requireContext(), R.color.white)
+            requireContext(), R.color.muted)
         bandButtons.forEach { (id, btn) ->
             btn.isChecked = id == selectedId
-            // Make the active filter unmistakable: filled brand chip vs
-            // flat outlined chip. The default ToggleButton checked state
-            // is a barely-visible shade difference.
-            btn.setTextColor(if (btn.isChecked) white else off)
+            // Tonal-on + brand text for the active filter vs a quiet
+            // outlined pill when off.
+            btn.setTextColor(if (btn.isChecked) on else off)
             btn.setTypeface(
                 btn.typeface,
                 if (btn.isChecked) android.graphics.Typeface.BOLD
@@ -286,6 +308,7 @@ class BrowseFragment : Fragment() {
         regionModel = com.kyronapp.kyron.data.NationalCoverage
             .byRegionId(states, regionId)?.resultModel
             ?: Regions.nationalModel(app.regions.activeInfo())
+        if (::adapter.isInitialized) adapter.model = regionModel
         // Always re-sync the spinners with the fragment's own state first:
         // after a view recreation (rotation, process restore) the views
         // are recreated empty while these vars hold the truth — and the

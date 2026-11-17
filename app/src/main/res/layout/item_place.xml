@@ -10,19 +10,24 @@
     android:clipToOutline="true"
     android:foreground="?attr/selectableItemBackground"
     android:orientation="horizontal"
-    android:padding="12dp"
+    android:padding="10dp"
     android:stateListAnimator="@animator/press_scale">
 
+    <!-- Placard tile: score-colored top band over the real OSM map
+         thumbnail (or monogram fallback) + condensed score chip.
+         transitionName pairs with Detail's hero for the shared grow. -->
     <FrameLayout
-        android:layout_width="92dp"
-        android:layout_height="92dp">
+        android:id="@+id/placard"
+        android:layout_width="84dp"
+        android:layout_height="96dp"
+        android:background="@drawable/photo_tile"
+        android:clipToOutline="true"
+        android:transitionName="placard">
 
         <ImageView
             android:id="@+id/photo"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/photo_tile"
-            android:clipToOutline="true"
             android:contentDescription="@string/cd_place_map"
             android:scaleType="centerCrop" />
 
@@ -30,12 +35,17 @@
             android:id="@+id/mono"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/photo_tile"
-            android:clipToOutline="true"
+            android:fontFamily="@font/font_barlow_condensed"
             android:gravity="center"
             android:textColor="@color/white"
-            android:textSize="34sp"
-            android:textStyle="bold" />
+            android:textFontWeight="700"
+            android:textSize="34sp" />
+
+        <View
+            android:id="@+id/score_band"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_gravity="top" />
 
         <TextView
             android:id="@+id/score"
@@ -44,14 +54,15 @@
             android:layout_gravity="bottom|start"
             android:layout_margin="6dp"
             android:background="@drawable/score_chip"
-            android:minWidth="30dp"
+            android:fontFamily="@font/font_barlow_condensed"
             android:gravity="center"
-            android:paddingStart="7dp"
-            android:paddingEnd="7dp"
+            android:minWidth="32dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:paddingTop="2dp"
             android:paddingBottom="2dp"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:textFontWeight="700"
+            android:textSize="15sp" />
 
         <ImageButton
             android:id="@+id/star"
@@ -78,8 +89,9 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textSize="15.5sp"
-            android:textStyle="bold" />
+            android:textColor="@color/ink"
+            android:textFontWeight="600"
+            android:textSize="15.5sp" />
 
         <TextView
             android:id="@+id/addr"

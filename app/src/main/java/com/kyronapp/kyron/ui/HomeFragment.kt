@@ -1,13 +1,17 @@
 package com.kyronapp.kyron.ui
 
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.kyronapp.kyron.KyronApplication
@@ -70,7 +74,21 @@ class HomeFragment : Fragment() {
         v.findViewById<View>(R.id.action_regions).setOnClickListener {
             startActivity(Intent(requireContext(), CoverageActivity::class.java))
         }
+
+        // One orchestrated entrance per session — fragments stay alive,
+        // so revisiting Home never replays it.
+        if (!playedIntro) {
+            playedIntro = true
+            Ui.animateIn(greeting, 0)
+            Ui.animateIn(regionSub, 50)
+            Ui.animateIn(search, 90)
+            Ui.animateIn(v.findViewById(R.id.home_stats), 170)
+            Ui.animateIn(v.findViewById(R.id.home_tiles), 230)
+            Ui.animateIn(v.findViewById(R.id.home_model_card), 300)
+        }
     }
+
+    private var playedIntro = false
 
     override fun onResume() {
         super.onResume()
@@ -116,7 +134,18 @@ class HomeFragment : Fragment() {
             val places = withContext(Dispatchers.IO) {
                 app.repository.regionPlaceCount(info.regionId)
             }
-            statPlaces.text = "%,d".format(places)
+            if (Ui.reduceMotion(requireContext()) || places <= 0) {
+                statPlaces.text = "%,d".format(places)
+            } else {
+                ValueAnimator.ofInt(0, places).apply {
+                    duration = 700
+                    interpolator = android.view.animation.DecelerateInterpolator(2f)
+                    addUpdateListener {
+                        statPlaces.text = "%,d".format(it.animatedValue)
+                    }
+                    start()
+                }
+            }
         }
 
         // "Watching": the integrated Favorites surface — starred places
@@ -178,60 +207,83 @@ class HomeFragment : Fragment() {
         }
     }
 
-    /** Compact place row: colored status strip + name + result/date/city,
-     *  tap → Detail. Shared by the Watching and Needs-attention lists. */
+    /** Placard place row: score rendered like the posted card — banded
+     *  tile, condensed numeral — next to name + date/city, tap → Detail.
+     *  Shared by the Watching and Needs-attention lists. */
     private fun placeRow(
         p: com.kyronapp.kyron.data.Place,
         model: String
     ): View {
+        val ctx = requireContext()
         val dp = resources.displayMetrics.density
-        val row = android.widget.LinearLayout(requireContext()).apply {
-                orientation = android.widget.LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                setBackgroundResource(R.drawable.card_bg)
-                setPadding(0, 0, (14 * dp).toInt(), 0)
-                isClickable = true; isFocusable = true
-                stateListAnimator = android.animation.AnimatorInflater
-                    .loadStateListAnimator(context, R.animator.press_scale)
-                setOnClickListener {
-                    (activity as? MainActivity)?.openPlace(p.id)
-                }
+        fun d(v: Float) = (v * dp).toInt()
+        val scoreCol = Ui.scoreColor(ctx, p, model)
+
+        val row = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundResource(R.drawable.card_bg)
+            setPadding(d(10f), d(10f), d(14f), d(10f))
+            isClickable = true; isFocusable = true
+            stateListAnimator = android.animation.AnimatorInflater
+                .loadStateListAnimator(context, R.animator.press_scale)
+            setOnClickListener {
+                (activity as? MainActivity)?.openPlace(p.id)
             }
-            // Left status strip: model-aware worst color.
-            val strip = View(requireContext()).apply {
-                setBackgroundColor(worstColor(p, model))
-            }
-            row.addView(strip, android.widget.LinearLayout.LayoutParams((5 * dp).toInt(), -1).apply {
-                marginEnd = (12 * dp).toInt()
-            })
-            val texts = android.widget.LinearLayout(requireContext()).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
-                setPadding(0, (12 * dp).toInt(), 0, (12 * dp).toInt())
-            }
-            texts.addView(TextView(requireContext()).apply {
-                text = p.name
-                setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.ink))
-                textSize = 14f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+
+        // Placard: white tile + score-colored top band + big condensed numeral.
+        val placard = FrameLayout(ctx).apply {
+            setBackgroundResource(R.drawable.placard_tile)
+            clipToOutline = true
+        }
+        placard.addView(
+            View(ctx).apply { setBackgroundColor(scoreCol) },
+            FrameLayout.LayoutParams(-1, d(4f), Gravity.TOP)
+        )
+        placard.addView(
+            TextView(ctx).apply {
+                text = p.badgeText
+                setTextColor(scoreCol)
+                textSize = if (p.hasNumericScore) 26f else 13f
+                typeface = ResourcesCompat.getFont(ctx, R.font.barlowcondensed_bold)
+                gravity = Gravity.CENTER
                 maxLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
-            })
-            val badge = if (p.hasNumericScore) p.score.toString()
-            else com.kyronapp.kyron.data.Place.shortResultLabel(p.nativeResult)
-            texts.addView(TextView(requireContext()).apply {
-                text = buildString {
-                    append(badge)
-                    if (p.date.isNotBlank()) append(" · ${p.date}")
-                    if (p.city.isNotBlank()) append(" · ${p.city}")
+            },
+            FrameLayout.LayoutParams(-1, -1)
+        )
+        row.addView(placard, android.widget.LinearLayout.LayoutParams(d(56f), d(62f)))
+
+        val texts = android.widget.LinearLayout(ctx).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(d(14f), 0, 0, 0)
+        }
+        texts.addView(TextView(ctx).apply {
+            text = p.name
+            setTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.ink))
+            textSize = 15f
+            typeface = ResourcesCompat.getFont(ctx, R.font.barlow_semibold)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        texts.addView(TextView(ctx).apply {
+            text = buildString {
+                if (p.date.isNotBlank()) append(Ui.fmtDate(p.date))
+                if (p.city.isNotBlank()) {
+                    if (isNotEmpty()) append("  ·  ")
+                    append(Ui.titleCase(p.city))
                 }
-                setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.muted))
-                textSize = 12f
-                maxLines = 1
-                ellipsize = android.text.TextUtils.TruncateAt.END
-            })
+            }.ifBlank { p.bandLabel }
+            setTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.muted))
+            textSize = 12.5f
+            setPadding(0, d(2f), 0, 0)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
         row.addView(texts, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
         row.layoutParams = android.widget.LinearLayout.LayoutParams(-1, -2).apply {
-            bottomMargin = (10 * dp).toInt()
+            bottomMargin = d(10f)
         }
         return row
     }
@@ -281,28 +333,6 @@ class HomeFragment : Fragment() {
             row.addView(chip, android.widget.LinearLayout.LayoutParams(-2, -2).apply {
                 marginEnd = (8 * dp).toInt()
             })
-        }
-    }
-
-    /** Worst-first strip color, model-aware (mirrors MapFragment's pin scale). */
-    private fun worstColor(p: com.kyronapp.kyron.data.Place, model: String): Int {
-        if (!p.hasNumericScore) return when (p.resultTone) {
-            1 -> 0xFF2E9E4F.toInt()
-            2 -> 0xFFE8A13A.toInt()
-            3 -> 0xFFD9534F.toInt()
-            else -> 0xFF8A97A5.toInt()
-        }
-        return when (model) {
-            NationalCoverage.MODEL_PENALTY_LOW -> when {
-                p.score <= 13 -> 0xFF2E9E4F.toInt()
-                p.score <= 27 -> 0xFFE8A13A.toInt()
-                else -> 0xFFD9534F.toInt()
-            }
-            else -> when {
-                p.score >= 95 -> 0xFF2E9E4F.toInt()
-                p.score >= 85 -> 0xFF7AB648.toInt()
-                else -> 0xFFE8A13A.toInt()
-            }
         }
     }
 

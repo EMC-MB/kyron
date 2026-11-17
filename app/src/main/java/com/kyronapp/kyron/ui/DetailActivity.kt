@@ -38,9 +38,13 @@ class DetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_detail)
         placeId = intent?.getStringExtra(EXTRA_PLACE_ID)
         findViewById<View>(R.id.d_back).setOnClickListener { finish() }
+        // Shared-element grow: the list placard flies here when the
+        // caller passed one; rendering starts it regardless.
+        postponeEnterTransition()
         scope.launch {
             app.repository.load()
             render()
+            startPostponedEnterTransition()
         }
     }
 
@@ -55,53 +59,78 @@ class DetailActivity : AppCompatActivity() {
             findViewById<View>(R.id.d_share).visibility = View.GONE
             return
         }
+        // The place's own region model — a saved favorite can outlive a
+        // region switch, so tone comes from the place's jurisdiction.
+        val states = com.kyronapp.kyron.data.NationalCoverage.cached()
+            ?: runCatching {
+                com.kyronapp.kyron.data.NationalCoverage.load(this)
+            }.getOrDefault(emptyList())
+        val model = com.kyronapp.kyron.data.NationalCoverage
+            .byRegionId(states, place.regionId)?.resultModel
+            ?: com.kyronapp.kyron.data.Regions.nationalModel(app.regions.activeInfo())
+        val scoreCol = Ui.scoreColor(this, place, model)
+
         val scoreView = findViewById<TextView>(R.id.d_score)
+        val label = findViewById<TextView>(R.id.d_score_label)
+        val band = findViewById<View>(R.id.d_band)
+        band.setBackgroundColor(scoreCol)
+        scoreView.setTextColor(scoreCol)
         if (place.hasNumericScore) {
-            scoreView.text = place.score.toString()
-            scoreView.textSize = 19f
-            scoreView.setBackgroundResource(
-                when {
-                    place.score >= 95 -> R.drawable.score_green
-                    place.score >= 85 -> R.drawable.score_lime
-                    else -> R.drawable.score_amber
+            label.text = "SCORE"
+            scoreView.textSize = 54f
+            if (Ui.reduceMotion(this)) {
+                scoreView.text = place.score.toString()
+            } else {
+                android.animation.ValueAnimator.ofInt(0, place.score).apply {
+                    duration = 650
+                    interpolator = android.view.animation.DecelerateInterpolator(2f)
+                    addUpdateListener { scoreView.text = it.animatedValue.toString() }
+                    start()
                 }
-            )
+            }
         } else {
             // Disposition regions: badge = the native result, compacted,
             // tone-colored. The verbatim result is in the meta line.
+            label.text = "RESULT"
             scoreView.text = place.badgeText
-            scoreView.textSize = 11f
-            scoreView.setBackgroundResource(
-                when (place.resultTone) {
-                    1 -> R.drawable.score_green
-                    2 -> R.drawable.score_amber
-                    3 -> R.drawable.score_red
-                    else -> R.drawable.score_gray
-                }
-            )
-            scoreView.setTextColor(0xFFFFFFFF.toInt())
+            scoreView.textSize = 26f
         }
+        bindMeter(place, model, scoreCol)
+
         findViewById<TextView>(R.id.d_name).text = place.name
-        findViewById<TextView>(R.id.d_addr).text = place.fullAddress()
+        findViewById<TextView>(R.id.d_addr).text = Ui.titleCase(place.fullAddress())
         findViewById<TextView>(R.id.d_meta).text = if (place.hasNumericScore) {
-            "${place.bandLabel} · last inspected ${place.date}"
+            "${place.bandLabel} · last inspected ${Ui.fmtDate(place.date)}"
         } else {
             buildString {
                 append(place.nativeResult.ifBlank { "No inspection on file" })
-                if (place.date.isNotBlank()) append(" · last inspected ${place.date}")
+                if (place.date.isNotBlank()) append(" · last inspected ${Ui.fmtDate(place.date)}")
             }
         }
         findViewById<TextView>(R.id.d_source).text =
             "Source: ${SourceRegistry.byId(place.source)?.displayName ?: com.kyronapp.kyron.data.Regions.sourceDisplayName(place.source)}"
 
         val isFav = app.prefs.favorites.contains(place.id)
-        val favBtn = findViewById<Button>(R.id.d_fav)
-        favBtn.text = if (isFav) "Watching" else "Watch this place"
-        favBtn.setCompoundDrawablesWithIntrinsicBounds(
-            ContextCompat.getDrawable(this, if (isFav) R.drawable.ic_star else R.drawable.ic_star_border),
-            null, null, null
+        val favBtn = findViewById<android.widget.ImageButton>(R.id.d_fav)
+        favBtn.setImageResource(if (isFav) R.drawable.ic_star else R.drawable.ic_star_border)
+        favBtn.setColorFilter(
+            ContextCompat.getColor(this, if (isFav) R.color.star_on else R.color.white)
         )
+        favBtn.contentDescription = getString(
+            if (isFav) R.string.cd_watching else R.string.cd_watch)
         favBtn.setOnClickListener {
+            Ui.haptic(it)
+            it.animate().scaleX(0.7f).scaleY(0.7f).setDuration(90).withEndAction {
+                it.animate().scaleX(1f).scaleY(1f).setDuration(160)
+                    .setInterpolator(android.view.animation.OvershootInterpolator())
+                    .start()
+            }.start()
+            app.prefs.toggleFavorite(place.id)
+            render()
+        }
+        findViewById<Button>(R.id.d_watch).text =
+            if (isFav) "Watching ✓" else "Watch this place"
+        findViewById<Button>(R.id.d_watch).setOnClickListener {
             app.prefs.toggleFavorite(place.id)
             render()
         }
@@ -122,7 +151,7 @@ class DetailActivity : AppCompatActivity() {
                     ).show()
                 }
         }
-        findViewById<Button>(R.id.d_share).setOnClickListener {
+        findViewById<android.widget.ImageButton>(R.id.d_share).setOnClickListener {
             val resultText = if (place.hasNumericScore) {
                 "scored ${place.score} (${place.bandLabel})"
             } else if (place.nativeResult.isNotBlank()) {
@@ -163,15 +192,23 @@ class DetailActivity : AppCompatActivity() {
                 // whose checked state render() owns (a tap re-renders,
                 // which re-checks exactly the selected inspection).
                 val chip = ToggleButton(this).apply {
-                    minHeight = (48f * resources.displayMetrics.density).toInt()
-                    val label = "${ins.badgeText} · ${ins.date}"
+                    minHeight = (40f * resources.displayMetrics.density).toInt()
+                    minWidth = 0
+                    val label = "${ins.badgeText} · ${Ui.fmtDate(ins.date)}"
                     textOn = label
                     textOff = label
                     text = label
+                    textSize = 13f
                     isChecked = i == inspIdx
+                    setBackgroundResource(R.drawable.chip_toggle)
+                    setTextColor(ContextCompat.getColorStateList(context, R.color.chip_text))
+                    setPadding((14 * resources.displayMetrics.density).toInt(), 0,
+                        (14 * resources.displayMetrics.density).toInt(), 0)
                     setOnClickListener { inspIdx = i; render() }
                 }
-                chips.addView(chip)
+                chips.addView(chip, LinearLayout.LayoutParams(-2, -2).apply {
+                    marginEnd = (8 * resources.displayMetrics.density).toInt()
+                })
             }
         } else {
             histCard.visibility = View.GONE
@@ -304,6 +341,40 @@ class DetailActivity : AppCompatActivity() {
                 }
             } else {
                 loadBtn.visibility = View.GONE
+            }
+        }
+    }
+
+    /** Score meter on the placard — only meaningful on a 0–100 scale,
+     *  where 85 is the published reinspection line. Other models hide it. */
+    private fun bindMeter(place: Place, model: String, scoreCol: Int) {
+        val meter = findViewById<View>(R.id.d_meter) ?: return
+        if (!place.hasNumericScore ||
+            model != com.kyronapp.kyron.data.NationalCoverage.MODEL_SCORE_100_HIGH) {
+            meter.visibility = View.GONE
+            return
+        }
+        meter.visibility = View.VISIBLE
+        val fill = findViewById<View>(R.id.d_meter_fill)
+        val tick = findViewById<View>(R.id.d_meter_tick)
+        fill.setBackgroundColor(scoreCol)
+        meter.post {
+            val w = meter.width
+            val target = (w * (place.score.coerceIn(0, 100) / 100f)).toInt()
+            tick.x = w * 0.85f - 1
+            if (Ui.reduceMotion(this)) {
+                fill.layoutParams = fill.layoutParams.apply { width = target }
+            } else {
+                android.animation.ValueAnimator.ofInt(0, target).apply {
+                    duration = 650
+                    interpolator = android.view.animation.DecelerateInterpolator(2f)
+                    addUpdateListener {
+                        fill.layoutParams = fill.layoutParams.apply {
+                            width = it.animatedValue as Int
+                        }
+                    }
+                    start()
+                }
             }
         }
     }
