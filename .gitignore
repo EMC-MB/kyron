@@ -24,6 +24,7 @@ __pycache__/
 
 # Socrata city/county harvest outputs + packs (regenerate with harvest/socrata_cities)
 harvest/socrata_cities/out/
+harvest/opendata/out/
 
 # Generic-platform harvest raw caches + packs (regenerate with harvest/mhd, sfi, dhd)
 harvest/mhd/raw/

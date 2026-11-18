@@ -52,6 +52,9 @@ SOURCE_OF = {
     "us-la": ("la-ldh", "harvest/dhd"),
     "us-ms": ("ms-msdh", "harvest/ms"),
     "us-ri": ("ri-doh", "harvest/dhd"),
+    "us-ma": ("ma-boston", "harvest/opendata"),
+    "us-oh": ("oh-cincinnati", "harvest/opendata"),
+    "us-mi": ("mi-detroit", "harvest/opendata"),
 }
 
 
