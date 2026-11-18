@@ -22,6 +22,8 @@ from sources import _place, _finish, _iso, _coord, NO_SCORE  # noqa: E402
 
 CKAN = "https://data.boston.gov/api/3/action/"
 SOCRATA = "https://{domain}/resource/{dataset}.json"
+LOUISVILLE = ("https://services1.arcgis.com/79kfd2K6fskCAkyg/arcgis/rest/"
+              "services/FoodServiceData/FeatureServer")
 ARCGIS_DETROIT = ("https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/"
                   "services/food_service_establishment_inspections/FeatureServer")
 
@@ -47,6 +49,16 @@ SOURCES = {
         "attribution": "City of Cincinnati — Food Safety Program inspections, "
                        "Cincinnati Open Data (rg6p-b3h3). Public data; City of "
                        "Cincinnati open data terms of use.",
+    },
+    "louisville": {
+        "region": "us-ky", "state": "KY", "name": "Kentucky (Louisville)",
+        "source_id": "ky-louisville", "jurisdiction": "KY-LOUISVILLE-LMPHW",
+        "jur_name": "Louisville Metro Department of Public Health & Wellness",
+        "dataset": "FoodServiceData", "county": "Jefferson",
+        "model": "SCORE_100_HIGH", "detail": "https://louvue.com/",
+        "attribution": "Louisville Metro Department of Public Health & Wellness — "
+                       "Restaurant Inspection Scores, Louisville Metro KY ArcGIS "
+                       "(FoodServiceData). Public data; Louisville Metro open data terms.",
     },
     "detroit": {
         "region": "us-mi", "state": "MI", "name": "Michigan (Detroit)",
@@ -175,6 +187,32 @@ def normalize_cincinnati(rows, cfg):
     return _finish(places)
 
 
+def normalize_louisville(feats, cfg):
+    places = {}
+    for f in feats:
+        a = f["attributes"]
+        key = str(a.get("EstablishmentID") or "")
+        name = (a.get("EstablishmentName") or "").strip()
+        d = _iso(a.get("InspectionDate"))
+        if not key or not name:
+            continue
+        p = places.get(key)
+        if p is None:
+            p = places[key] = _place(cfg, key, name, a.get("Address") or "",
+                                     (a.get("City") or "").title(), str(a.get("Zip") or ""),
+                                     cfg["county"], None, None, cfg["detail"])
+        if not d:
+            continue
+        ikey = str(a.get("InspectionID") or f"{key}|{d}")
+        if ikey not in p["_insp"]:
+            score = a.get("score")
+            grade = (a.get("Grade") or "").strip()
+            p["_insp"][ikey] = {"d": d, "t": (a.get("Ins_TypeDesc") or "").title(),
+                                "s": int(score) if isinstance(score, (int, float)) else NO_SCORE,
+                                "disp": f"Grade {grade}" if grade else "", "v": [], "_seen": set()}
+    return _finish(places)
+
+
 def normalize_detroit(ests, insps, viols, cfg):
     places, by_insp = {}, {}
     for f in ests:
@@ -221,13 +259,16 @@ def main():
     elif a.source == "cincinnati":
         rows, flog = fetch_socrata(cfg, a.limit_rows)
         places = normalize_cincinnati(rows, cfg)
+    elif a.source == "louisville":
+        feats, flog = fetch_arcgis_layer(LOUISVILLE + "/0", False, a.limit_rows)
+        places = normalize_louisville(feats, cfg)
     else:
         ests, e1 = fetch_arcgis_layer(ARCGIS_DETROIT + "/0", True, a.limit_rows)
         insps, e2 = fetch_arcgis_layer(ARCGIS_DETROIT + "/1", False, a.limit_rows)
         viols, e3 = fetch_arcgis_layer(ARCGIS_DETROIT + "/2", False, a.limit_rows)
         flog = {"establishments": e1, "inspections": e2, "violations": e3}
         places = normalize_detroit(ests, insps, viols, cfg)
-    rep = common.validate_places(places, forbid_scores=True)
+    rep = common.validate_places(places, forbid_scores=cfg["model"] != "SCORE_100_HIGH")
     common.emit(out, places=places, fetch_log=flog, validate_report=rep,
                 manifest={"generated_at": datetime.now(timezone.utc).isoformat(),
                           "source": a.source, "dataset": cfg["dataset"]})

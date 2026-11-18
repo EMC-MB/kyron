@@ -2048,13 +2048,13 @@
    "name": "Kentucky",
    "type": "state",
    "result_model": "SCORE_100_HIGH",
-   "summary": "County-fragmented (registry doc research).",
-   "pack_status": "none",
-   "pack_manifest_url": null,
-   "pack_availability": "none",
-   "artifact_verified": "",
-   "pack_host_status": "",
-   "pack_host_checked": "",
+   "summary": "Pack published to the data-packs release, artifact sha256-verified 2026-11-18 (5,118 places).",
+   "pack_status": "published",
+   "pack_manifest_url": "https://github.com/EMC-MB/kyron/releases/download/data-packs/us-ky.manifest.json",
+   "pack_availability": "downloadable-verified",
+   "artifact_verified": "2026-11-18",
+   "pack_host_status": "reachable",
+   "pack_host_checked": "2026-11-18",
    "center": {
     "lat": 37.9,
     "lng": -85.77
@@ -2076,6 +2076,23 @@
      "refresh": "",
      "last_refresh": "",
      "notes": "Fragmented (verified in US registry doc 2026-10-13): Louisville, Lexington, Northern Kentucky, Jessamine and others publish their own scores/violations on different sites."
+    },
+    {
+     "id": "ky-louisville",
+     "agency": "Louisville Metro Department of Public Health & Wellness",
+     "coverage": "City of Louisville / Jefferson County (Louisville Metro)",
+     "access": "api",
+     "website": "https://louvue.com/",
+     "violations": "unverified",
+     "history": "latest-only",
+     "result_model": "SCORE_100_HIGH",
+     "status": "pack-built",
+     "verified": "2026-11-18",
+     "blocker": "",
+     "restrictions": "",
+     "refresh": "Harvest pipeline harvest/opendata",
+     "last_refresh": "2026-11-18",
+     "notes": "Louisville Metro KY FoodServiceData ArcGIS layer: 0-100 score and A/B/C grade per inspection, one year of inspections (5,118 establishments fetched 2026-11-18). No coordinates in the source."
     }
    ]
   },
