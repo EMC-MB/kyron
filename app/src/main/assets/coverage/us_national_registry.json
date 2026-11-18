@@ -499,12 +499,12 @@
      "violations": "unverified",
      "history": "unverified",
      "result_model": "VIOLATIONS_ONLY",
-     "status": "pack-built",
+     "status": "official-link-only",
      "verified": "",
      "blocker": "",
      "restrictions": "No reproducible automated access verified; official link only — NOT integrated restaurant data.",
-     "refresh": "Harvest pipeline None",
-     "last_refresh": "2026-11-17",
+     "refresh": "",
+     "last_refresh": "",
      "notes": "No statewide public portal verified; county-level publication."
     }
    ]
@@ -553,12 +553,12 @@
      "violations": "unverified",
      "history": "unverified",
      "result_model": "VIOLATIONS_ONLY",
-     "status": "pack-built",
+     "status": "official-link-only",
      "verified": "",
      "blocker": "",
      "restrictions": "No reproducible automated access verified; official link only — NOT integrated restaurant data.",
-     "refresh": "Harvest pipeline None",
-     "last_refresh": "2026-11-17",
+     "refresh": "",
+     "last_refresh": "",
      "notes": "No statewide results portal verified."
     }
    ]
@@ -732,12 +732,12 @@
      "violations": "unverified",
      "history": "unverified",
      "result_model": "VIOLATIONS_ONLY",
-     "status": "pack-built",
+     "status": "official-link-only",
      "verified": "",
      "blocker": "",
      "restrictions": "No reproducible automated access verified; official link only — NOT integrated restaurant data.",
-     "refresh": "Harvest pipeline None",
-     "last_refresh": "2026-11-17",
+     "refresh": "",
+     "last_refresh": "",
      "notes": "No statewide results portal verified."
     }
    ]

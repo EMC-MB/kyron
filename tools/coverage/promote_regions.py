@@ -116,7 +116,7 @@ def main():
                 f"({m['placeCount']:,} places).")})
         sid, pipeline = SOURCE_OF.get(rid, (None, None))
         for s in e["sources"]:
-            if sid is None or s["id"] == sid:
+            if sid is not None and s["id"] == sid:
                 s["status"] = "pack-built"
                 s["refresh"] = f"Harvest pipeline {pipeline}"
                 s["last_refresh"] = TODAY

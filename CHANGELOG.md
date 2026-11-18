@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-11-18
+
+### Changed
+- Full "posted placard" visual redesign: Barlow and Barlow Condensed type,
+  one score-tone palette shared by Home, Browse, Map and Detail, a floating
+  tab dock with a sliding indicator, and coordinated entrance, press, list
+  and detail animations (reduced-motion aware).
+- Region coverage: 29 of 50 states now have a verified, downloadable region
+  pack (including bundled Alabama). Newly integrated: Alaska, Colorado,
+  Delaware, Georgia, Illinois, Iowa, Maryland, Massachusetts, Michigan,
+  Montana, New York, Ohio, Pennsylvania, Rhode Island, South Dakota,
+  Tennessee, Vermont, Virginia, Washington, Wisconsin, Kentucky (Louisville)
+  and others, each byte-verified against the signed index.
+
+### Fixed
+- Search: prefix matching works ("Zaxby" finds "Zaxbys"), and a LIKE fallback
+  runs when region or county filters remove every full-text match.
+- Coverage: taps are no longer swallowed while host probes run; per-state
+  place counts are fetched in one batched query instead of one per state;
+  HTTP connections used by pack checks are always closed.
+- Detail: the shared-element transition can no longer leave a blank screen
+  when loading fails.
+- Alerts: the county picker and home presets follow the active region instead
+  of always showing Alabama.
+- Home: the watched list sorts by each place's own scoring model, so penalty
+  scales are no longer ordered backwards.
+- Detail: the share text uses the app's date format.
+
 ### Added
 - GitHub Actions CI workflow for data validation gates; CONTRIBUTING.md,
   SECURITY.md, INSTALL.md (earlier 2026-10-22 improvements, preserved).
