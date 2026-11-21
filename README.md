@@ -164,12 +164,6 @@ All scores are public health-department records, republished as-is.
 Inspection data belongs to the publishing agencies; Kyron's code is what
 this repository licenses.
 
-CI checks the bundled Jefferson County starter catalog for row integrity,
-search, and map pins. Before bundling a statewide replacement, run both
-`python3 tools/validate_seed.py <statewide-seed>` and
-`python3 tools/canary_gate.py <statewide-seed> tools/canaries.json`
-against the statewide export.
-
 ## License
 
 MIT — see [LICENSE](LICENSE). The bundled Alabama starter catalog is checked
