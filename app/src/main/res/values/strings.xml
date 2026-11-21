@@ -102,6 +102,7 @@ Tap the star on any place and Kyron will watch it for you — when it gets a new
     <string name="home_region_sub">Showing %1$s inspection data</string>
     <string name="home_search_hint">Search restaurants, cities, ZIP codes</string>
     <string name="home_stat_places">Places</string>
+    <string name="home_stat_loading">…</string>
     <string name="home_stat_watched">Watching</string>
     <string name="home_stat_sync">Last sync</string>
     <string name="home_sync_never">Never</string>
