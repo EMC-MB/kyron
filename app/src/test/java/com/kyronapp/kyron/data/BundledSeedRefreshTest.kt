@@ -24,28 +24,37 @@ class BundledSeedRefreshTest {
     private val regionId = Regions.ALABAMA.regionId
 
     @Test
-    fun smallerSeedPreservesCatalogInspectionsAndSearch() = runBlocking {
-        writeSeed(place("existing", "Existing Diner", 92), place("watched", "Watched Cafe", 88))
+    fun smallSeedAddsNewPlacesWithoutRemovingInstalledInspections() = runBlocking {
+        writeSeed(
+            place("existing", "Existing Diner", 92),
+            place("watched", "Watched Cafe", 88),
+            place("third", "Third Cafe", 90),
+            place("fourth", "Fourth Cafe", 94)
+        )
         val original = PlaceRepository(context).also { it.load() }
         val originalSeed = original.metaGet(PlaceRepository.META_BUNDLED_SHA)
         val originalVersion = original.installedRegionVersion(regionId)
 
-        writeSeed(place("existing", "Existing Diner", 67))
+        writeSeed(place("existing", "Existing Diner", 67), place("new", "New Cafe", 91))
         val upgraded = PlaceRepository(context).also { it.load() }
 
-        assertEquals(2, upgraded.regionPlaceCount(regionId))
+        assertEquals(5, upgraded.regionPlaceCount(regionId))
         assertEquals(92, upgraded.byId("existing")?.score)
         assertEquals(88, upgraded.byId("watched")?.inspections?.single()?.score)
         assertEquals(
             listOf("watched"),
             upgraded.searchPlaces(PlaceQuery(text = "Watched Cafe"), regionId).map { it.id }
         )
-        assertEquals(originalSeed, upgraded.metaGet(PlaceRepository.META_BUNDLED_SHA))
-        assertEquals(originalVersion, upgraded.installedRegionVersion(regionId))
+        assertEquals(
+            listOf("new"),
+            upgraded.searchPlaces(PlaceQuery(text = "New Cafe"), regionId).map { it.id }
+        )
+        assertNotEquals(originalSeed, upgraded.metaGet(PlaceRepository.META_BUNDLED_SHA))
+        assertNotEquals(originalVersion, upgraded.installedRegionVersion(regionId))
     }
 
     @Test
-    fun comparesImportedRowsAfterRejectingInvalidRecords() = runBlocking {
+    fun rejectsInvalidRecordsInUpdatedSeed() = runBlocking {
         writeSeed(place("existing", "Existing Diner", 92), place("watched", "Watched Cafe", 88))
         PlaceRepository(context).load()
 
@@ -58,7 +67,7 @@ class BundledSeedRefreshTest {
     }
 
     @Test
-    fun refreshCanRemoveOneRecordWhilePreservingDeviceCoordinates() = runBlocking {
+    fun expandedSeedDoesNotOverwriteInspectionsOrDeviceCoordinates() = runBlocking {
         writeSeed(
             place("existing", "Existing Diner", 92),
             place("watched", "Watched Cafe", 88),
@@ -68,14 +77,30 @@ class BundledSeedRefreshTest {
         val originalSeed = original.metaGet(PlaceRepository.META_BUNDLED_SHA)
         original.setCoords("existing", 33.52, -86.8)
 
-        writeSeed(place("existing", "Existing Diner", 95), place("watched", "Watched Cafe", 88))
+        writeSeed(
+            place("existing", "Existing Diner", 95).put("lat", 33.5).put("lng", -86.7),
+            place("watched", "Watched Cafe", 88),
+            place("new", "New Cafe", 89)
+        )
         val upgraded = PlaceRepository(context).also { it.load() }
 
-        assertEquals(2, upgraded.regionPlaceCount(regionId))
-        assertEquals(95, upgraded.byId("existing")?.score)
+        assertEquals(4, upgraded.regionPlaceCount(regionId))
+        assertEquals(92, upgraded.byId("existing")?.inspections?.single()?.score)
         assertEquals(33.52, upgraded.byId("existing")?.lat)
         assertEquals("DEVICE", upgraded.byId("existing")?.geoProvider)
         assertNotEquals(originalSeed, upgraded.metaGet(PlaceRepository.META_BUNDLED_SHA))
+    }
+
+    @Test
+    fun updatedSeedCanFillAMissingPinAtTheSameAddress() = runBlocking {
+        writeSeed(place("existing", "Existing Diner", 92))
+        PlaceRepository(context).load()
+
+        writeSeed(place("existing", "Existing Diner", 67).put("lat", 33.5).put("lng", -86.7))
+        val upgraded = PlaceRepository(context).also { it.load() }
+
+        assertEquals(33.5, upgraded.byId("existing")?.lat)
+        assertEquals(92, upgraded.byId("existing")?.score)
     }
 
     private fun writeSeed(vararg places: JSONObject) {

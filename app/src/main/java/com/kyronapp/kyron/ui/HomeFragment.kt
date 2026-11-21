@@ -15,10 +15,11 @@ import com.kyronapp.kyron.MainActivity
 import com.kyronapp.kyron.R
 import com.kyronapp.kyron.data.ExploreState
 import com.kyronapp.kyron.data.NationalCoverage
+import com.kyronapp.kyron.data.PlaceQuery
 import com.kyronapp.kyron.data.Regions
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Landing tab: greeting + region context, a hero search that routes into
@@ -35,6 +36,7 @@ class HomeFragment : Fragment() {
     private lateinit var statSync: TextView
     private lateinit var modelTitle: TextView
     private lateinit var modelBody: TextView
+    private var catalogJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -112,31 +114,25 @@ class HomeFragment : Fragment() {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            val places = withContext(Dispatchers.IO) {
-                app.repository.regionPlaceCount(info.regionId)
+        statPlaces.text = getString(R.string.home_stat_loading)
+        catalogJob = viewLifecycleOwner.lifecycleScope.launch {
+            app.repository.load()
+            app.repository.places.collectLatest { places ->
+                statPlaces.text = "%,d".format(places.count { it.regionId == info.regionId })
+                val favorites = app.prefs.favorites
+                val watched = places.filter { it.id in favorites }
+                    .sortedWith(compareBy { if (it.hasNumericScore) it.score else Int.MAX_VALUE })
+                bindWatch(watched, model)
+                val worst = app.repository.searchPlaces(PlaceQuery(limit = 5), info.regionId, model)
+                bindNeeds(worst, info.displayName, model)
             }
-            statPlaces.text = "%,d".format(places)
         }
+    }
 
-        // "Watching": the integrated Favorites surface — starred places
-        // with their current result, worst-looking first.
-        val watched = app.repository.places.value
-            .filter { app.prefs.favorites.contains(it.id) }
-            .sortedWith(compareBy { if (it.hasNumericScore) it.score else Int.MAX_VALUE })
-        bindWatch(watched, model)
-
-        // "Needs attention": the region's worst current results, sorted
-        // model-aware (highest demerits / lowest scores first).
-        viewLifecycleOwner.lifecycleScope.launch {
-            val worst = withContext(Dispatchers.IO) {
-                app.repository.searchPlaces(
-                    com.kyronapp.kyron.data.PlaceQuery(limit = 5),
-                    info.regionId, model
-                )
-            }
-            bindNeeds(worst, info.displayName, model)
-        }
+    override fun onPause() {
+        catalogJob?.cancel()
+        catalogJob = null
+        super.onPause()
     }
 
     private fun bindWatch(

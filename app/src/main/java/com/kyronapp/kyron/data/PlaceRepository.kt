@@ -5,6 +5,8 @@ import com.kyronapp.kyron.data.db.CatalogDb
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -37,10 +39,7 @@ data class PlaceQuery(
 class PlaceRepository(private val context: Context) {
 
     companion object {
-        /** Meta key holding the SHA-256 of the bundled seed this catalog
-         *  was last refreshed from (Workstream D / FIX5). Absent on every
-         *  catalog created before the fix — which is exactly the aged-DB
-         *  population the refresh exists to heal. */
+        /** SHA-256 of the bundled Alabama seed last applied to the catalog. */
         const val META_BUNDLED_SHA = "bundled_seed_sha:us-al"
     }
 
@@ -51,10 +50,11 @@ class PlaceRepository(private val context: Context) {
     private val _places = MutableStateFlow<List<Place>>(emptyList())
     val places: StateFlow<List<Place>> = _places
 
+    private val loadMutex = Mutex()
     @Volatile private var loaded = false
 
-    suspend fun load() {
-        if (loaded) return
+    suspend fun load() = loadMutex.withLock {
+        if (loaded) return@withLock
         withContext(Dispatchers.IO) {
             val db = catalog.writableDatabase
             if (catalog.placeCount(db) == 0) {
@@ -66,13 +66,8 @@ class PlaceRepository(private val context: Context) {
                         catalog.metaPut(db, META_BUNDLED_SHA, sha)
                     }
                 } else {
-                    // The catalog was seeded from a LEGACY places.json
-                    // (pre-SQLite app): its rows predate the bundled
-                    // seed's geocoding. Refresh the bundled region from
-                    // the current seed right away — this is the exact
-                    // state that left upgraded phones serving a pre-
-                    // geocode catalog (and a pin-less map) forever.
-                    refreshBundledRegion(db)
+                    // Fill gaps in a catalog migrated from legacy places.json.
+                    refreshBundledRegionIfSeedChanged(db)
                 }
             } else {
                 refreshBundledRegionIfSeedChanged(db)
@@ -98,72 +93,17 @@ class PlaceRepository(private val context: Context) {
         text to sha
     }.getOrNull()
 
-    /**
-     * Workstream D / FIX5 — the catalog-refresh trigger that did not exist:
-     * before this, load() imported the bundled seed ONLY into an empty
-     * catalog, so no bundled-seed improvement (the LF-1 Census pins, the
-     * FIX4 name restorations and orphan drops, Workstream A's +1,099 pins)
-     * EVER reached a device that had installed an earlier build — its
-     * catalog stayed at whatever its first install imported. When the
-     * bundled seed's fingerprint differs from the one recorded on device,
-     * replace the bundled region's rows from the current seed in one
-     * transaction, provided the replacement retains the majority of the
-     * region's place count. Device-produced coordinates (geo_prov='DEVICE')
-     * are preserved across the swap; downloaded regions and the user
-     * store are untouched. Sync-merged freshness for Alabama places is
-     * re-merged by the next scheduled sync, exactly as after a pack
-     * full-install.
-     */
+    /** Add missing Alabama listings and pins while preserving live results and history. */
     private fun refreshBundledRegionIfSeedChanged(db: android.database.sqlite.SQLiteDatabase) {
         val (text, sha) = bundledSeed() ?: return
-        if (catalog.metaGet(db, META_BUNDLED_SHA) == sha) return
-        swapBundledRegion(db, text, sha)
-    }
-
-    private fun refreshBundledRegion(db: android.database.sqlite.SQLiteDatabase) {
-        val (text, sha) = bundledSeed() ?: return
-        swapBundledRegion(db, text, sha)
-    }
-
-    private fun swapBundledRegion(
-        db: android.database.sqlite.SQLiteDatabase, seedText: String, seedSha: String
-    ) {
         val regionId = Regions.ALABAMA.regionId
-        val seed = JSONArray(seedText)
         db.beginTransaction()
         try {
-            val previousCount = catalog.regionPlaceCount(db, regionId)
-            // Allow routine removals while protecting statewide catalogs
-            // against a starter seed containing only a small sample.
-            val minimumCount = if (previousCount > 0) previousCount / 2 + 1 else 0
-            if (seed.length() < minimumCount) {
-                android.util.Log.w(
-                    "PlaceRepository",
-                    "Skipped undersized Alabama seed (${seed.length()} rows for $previousCount places)"
-                )
-                return
+            if (catalog.metaGet(db, META_BUNDLED_SHA) != sha) {
+                catalog.importSeed(db, JSONArray(text), mergeRegionId = regionId)
+                catalog.metaPut(db, META_BUNDLED_SHA, sha)
+                catalog.metaPut(db, "pack_version:$regionId", "bundled-" + sha.take(12))
             }
-
-            val deviceCoords = catalog.deviceCoords(db, regionId)
-            catalog.deleteRegionRows(db, regionId)
-            catalog.importSeed(db, seed)
-            // Invalid and duplicate rows can make the imported catalog
-            // smaller than the JSON array. Roll back the entire swap.
-            val importedCount = catalog.regionPlaceCount(db, regionId)
-            if (importedCount < minimumCount) {
-                android.util.Log.w(
-                    "PlaceRepository",
-                    "Rejected Alabama seed ($importedCount imported places, previously $previousCount)"
-                )
-                return
-            }
-            for ((id, ll) in deviceCoords) {
-                if (catalog.exists(db, id)) {
-                    catalog.setCoords(db, id, ll.first, ll.second, "DEVICE")
-                }
-            }
-            catalog.metaPut(db, META_BUNDLED_SHA, seedSha)
-            catalog.metaPut(db, "pack_version:$regionId", "bundled-" + seedSha.take(12))
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
