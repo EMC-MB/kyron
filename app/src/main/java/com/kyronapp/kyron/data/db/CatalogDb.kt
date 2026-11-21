@@ -258,20 +258,6 @@ class CatalogDb(context: Context) :
         return true
     }
 
-    /** Coordinates a device itself produced (geo_prov='DEVICE' — the old
-     *  on-device geocoder cache, drive-by fixes) for one region. The
-     *  bundled-region refresh preserves these across the swap: they are
-     *  device data, not seed data. */
-    fun deviceCoords(db: SQLiteDatabase, regionId: String): Map<String, Pair<Double, Double>> =
-        db.rawQuery(
-            "SELECT id, lat, lng FROM places WHERE region_id=? AND geo_prov='DEVICE' AND lat IS NOT NULL AND lng IS NOT NULL",
-            arrayOf(regionId)
-        ).use { c ->
-            val out = HashMap<String, Pair<Double, Double>>()
-            while (c.moveToNext()) out[c.getString(0)] = c.getDouble(1) to c.getDouble(2)
-            out
-        }
-
     /** Aggregate bounds over a region's ACCEPTED pins — one indexed
      *  scan used by the map to fit the data extent and to say honestly
      *  "the mapped places are over there". `bounds` is null when the
@@ -362,10 +348,13 @@ class CatalogDb(context: Context) :
      * Bulk-import a seed/pack JSON array. One transaction, prepared statements.
      * Legacy places carrying coordinates but no provenance are marked
      * ACCEPTED/HARVEST (they came from the earlier harvest pipeline).
+     * A bundled update restricted to [mergeRegionId] fills missing listings
+     * and pins and keeps installed place details and inspection rows.
      */
-    fun importSeed(db: SQLiteDatabase, arr: JSONArray) {
+    fun importSeed(db: SQLiteDatabase, arr: JSONArray, mergeRegionId: String? = null) {
+        val onConflict = if (mergeRegionId == null) "REPLACE" else "IGNORE"
         val ps = db.compileStatement(
-            """INSERT OR REPLACE INTO places
+            """INSERT OR $onConflict INTO places
                (id,name,name_lc,address,city,zip,county,score,date,source,lat,lng,
                 geo_status,geo_acc,geo_prov,geo_match,detail_url,date_key,
                 state,jurisdiction,region_id,result_text)
@@ -381,6 +370,7 @@ class CatalogDb(context: Context) :
         try {
             for (i in 0 until arr.length()) {
                 val p = Place.fromJson(arr.getJSONObject(i))
+                if (mergeRegionId != null && p.regionId != mergeRegionId) continue
                 // Fused/fragmented harvest rows must never reach the
                 // catalog: JCDH enumeration once scraped pager links
                 // ("1 2 3 … 10") as permits, yielding name='2', date='3'
@@ -419,7 +409,22 @@ class CatalogDb(context: Context) :
                 ps.bindLong(18, dateKey(p.date))
                 ps.bindString(19, p.state); ps.bindString(20, p.jurisdiction)
                 ps.bindString(21, p.regionId); ps.bindString(22, p.nativeResult)
-                ps.executeInsert()
+                if (ps.executeInsert() == -1L) {
+                    if (hasCoords && status == Place.STATUS_ACCEPTED) {
+                        val coords = ContentValues().apply {
+                            put("lat", p.lat); put("lng", p.lng)
+                            put("geo_status", status); put("geo_acc", acc)
+                            put("geo_prov", prov); put("geo_match", p.geoMatch)
+                        }
+                        db.update(
+                            "places", coords,
+                            "id=? AND region_id=? AND address=? AND city=? AND zip=? " +
+                                "AND geo_prov<>'DEVICE' AND (lat IS NULL OR lng IS NULL OR geo_status<>?)",
+                            arrayOf(p.id, p.regionId, p.address, p.city, p.zip, Place.STATUS_ACCEPTED)
+                        )
+                    }
+                    continue
+                }
                 p.inspections.forEachIndexed { idx, insp ->
                     isStmt.clearBindings()
                     isStmt.bindString(1, p.id); isStmt.bindLong(2, idx.toLong())
@@ -441,6 +446,9 @@ class CatalogDb(context: Context) :
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
+            ps.close()
+            isStmt.close()
+            fs?.close()
         }
     }
 

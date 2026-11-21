@@ -17,7 +17,7 @@ concurrency:
 jobs:
   smoke:
     name: Boot emulator; launch app; verify Coverage screen
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +25,16 @@ jobs:
         with: { distribution: temurin, java-version: "17" }
       - name: Assemble debug APK
         run: ./gradlew --no-daemon :app:assembleDebug
+      - name: Enable KVM for the Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm --settle
+          if [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; then
+            echo "::error::The GitHub runner did not expose a usable /dev/kvm device"
+            ls -l /dev/kvm || true
+            exit 1
+          fi
       - name: Run emulator smoke
         uses: reactivecircus/android-emulator-runner@v2
         with:
