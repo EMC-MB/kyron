@@ -61,6 +61,9 @@ def main(argv):
     doc = json.load(open(can_path, encoding='utf-8'))
     by_id = {p['id']: p for p in seed}
     failures = []
+    minimum_places = doc.get('minimum_places', 0)
+    if len(by_id) < minimum_places:
+        failures.append(f"only {len(by_id)} unique places; expected at least {minimum_places}")
 
     canaries = doc['canaries']
     n_pinned = n_accounted = 0
